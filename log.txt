@@ -1,0 +1,92 @@
+[install wsl]
+wsl --install	# automatically adds optional feature VirtualMachinePlatform
+		# requires restart afterwards
+wsl --install Ubuntu # can this be combined with the above?
+# image source:
+# https://github.com/microsoft/WSL/blob/master/distributions/DistributionInfo.json
+# provides these 2 links:
+# https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl
+# https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl
+
+[Ubuntu image setup]
+[...]
+Create a default Unix user account: itsc
+New password: changeme
+Retype new password: changeme
+[...]
+cd ~
+sudo apt update # NOT optional
+
+[g++ install]
+sudo apt install -y g++ git
+
+[IMUNES install]
+sudo apt-get install debconf-utils
+echo "docker.io docker.io/restart boolean true" | debconf-set-selections
+sudo apt install -y make tcl tcllib docker.io jq tk imagemagick xterm wireshark socat
+bash # Works if you replace this line with a restart from WSL (remember to do cd). if bash doesn't work, try simply an exit first. 
+git clone https://github.com/imunes/imunes.git && cd imunes && sudo make install && cd .. && rm -rf imunes
+sudo imunes -p
+
+mkdir imunes-templates && git clone https://github.com/imunes/imunes-examples.git
+cp imunes-examples/Traceroute/traceroute.imn imunes-templates/ # did i get them all?
+cp imunes-examples/Ping/ping.imn imunes-templates/
+rm -rf imunes-examples
+
+[set WSL options + oobe]
+sudo cp /mnt/c/Users/*/oobe_itsc-3146.sh /etc/
+sudo cp /mnt/c/Users/*/wsl-distribution.conf /etc/
+sudo cp /mnt/c/Users/*/wsl.conf /etc/
+
+[set-up for testing]
+echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history
+
+[package it]
+exit
+wsl --export -d Ubuntu itsc-3146-amd64.wsl # this is actually a tar file
+
+[testing]
+wsl --unregister Ubuntu
+# ensure these files are present in the .wsl tar-file
+#/etc/wsl.conf
+#/etc/wsl-distribution.conf
+#/etc/oobe_itsc-3146.sh
+#/usr/share/wsl/ubuntu.ico
+#/usr/share/wsl/terminal-profile.json
+./itsc-3146-amd64.wsl [press a key to exit after]
+wsl -d ITSC-3146
+[...]
+New password: a
+Retype new password: a
+[...]
+cd
+sudo imunes imunes-templates/traceroute.imn # assert you can see it, then close
+code .bash_history # you need VS code on your computer first
+
+[user-installation]
+wsl --install --from-file <filePath[...].wsl> # would this require wsl --install + restart first?
+OR
+double-click the .wsl file # would this require wsl --install + restart first?
+# from now on, you can search for "ITSC-3146" from your start menu
+[ask end user to test functionality + GUI + VSCode integration + (vpn?)]
+wsl -d ITSC-3146
+[...]
+sudo apt update && sudo apt upgrade
+[git config]
+git config --global user.name "Your Name"
+git config --global user.email "email@charlotte.edu"
+[GUI]
+sudo imunes imunes-templates/ping.imn # write a guide on fixing couldn't open display error
+[code]
+# install VS code on your computer if you haven't yet.
+code .bash_history # then hit trust window, then save test.sh, then use ls to make sure it appeared
+[files]
+# open explorer
+# left bar - Linux > ITSC-3146 > home > itsc (you may want to right-click the itsc folder and select Pin to Quick access)
+[vpm]
+# if vpn does not work and you are not connected to Eduroam, try:
+# [if your computer has a WSL Settings app, use that in the "networking" section]
+# [otherwise, ctrl+R -> "notepad.exe %UserProfile%\\.wslconfig"]
+[wsl2] # in this section, if it already exists
+networkingMode=mirrored
+dnsTunneling=true
