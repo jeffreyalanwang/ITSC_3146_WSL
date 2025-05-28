@@ -22,7 +22,7 @@ sudo apt install -y g++ git
 
 [IMUNES install]
 sudo apt-get install debconf-utils
-echo "docker.io docker.io/restart boolean true" | debconf-set-selections
+echo "docker.io docker.io/restart boolean true" | debconf-set-selections # turns out this doesn't matter as long as you restart the system after installing docker
 sudo apt install -y make tcl tcllib docker.io jq tk imagemagick xterm wireshark socat
 bash # Works if you replace this line with a restart from WSL (remember to do cd). if bash doesn't work, try simply an exit first. 
 git clone https://github.com/imunes/imunes.git && cd imunes && sudo make install && cd .. && rm -rf imunes

@@ -1,5 +1,7 @@
 #!/bin/bash
 set -euo pipefail
+# Based on standard Ubuntu WSL image: /usr/lib/wsl/wsl-setup.
+# Taken from Ubuntu WSL 24.04.2 image
 PREPARED_USER_NAME="itsc"
 
 # command_not_found_handle is a noop function that prevents printing error messages if WSL interop is disabled.
