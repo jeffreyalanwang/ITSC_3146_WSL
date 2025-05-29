@@ -1,0 +1,95 @@
+get_ubuntu_image:
+name: 'Obtain base Ubuntu images'
+description: 'From cache or from online'
+inputs:
+  no-cache:
+    description: 'Whether to allow accessing a recent cached version'
+    required: false
+    default: false
+  path:
+    description: 'Directory in which to place the images'
+    required: false
+    default: './'
+outputs:
+  amd64_path:
+    description: 'The path, including name, to the amd64 image.'
+    value: ${{ env.amd64_path }}
+  arm64_path:
+    description: 'The path, including name, to the ARM image.'
+    value: ${{ env.arm64_path }}
+runs:
+  using: "composite"
+  env:
+    amd64_filename: amd64.wsl
+    arm64_filename: arm64.wsl
+
+    # Final locations of the images
+    amd64_path: ${{ format("{0}{1}", inputs.path, env.amd64_filename) }}
+    arm64_path: ${{ format("{0}{1}", inputs.path, env.arm64_filename) }}
+
+    # Locations of the images when interacting with the cache
+    cache_dir: ./get_ubuntu_image_cache_dir/
+    amd64_cachepath: ${{ format("{0}{1}", env.cache_dir, env.amd64_filename) }}
+    arm64_cachepath: ${{ format("{0}{1}", env.cache_dir, env.arm64_filename) }}
+  steps:
+
+  - name: Get current date + time
+    id: get-date
+    run: |
+      DATE_STR=`date '+%F'`
+      echo "date=$DATE_STR" >> $GITHUB_OUTPUT
+      TIME_STR = `date '+%s'`
+      echo "time=$TIME_STR" >> $GITHUB_OUTPUT
+    outputs:
+      date: 'The current date as a string with no spaces.'
+      time: 'The current time as epoch (seconds).'
+
+  - name: Restore cached images
+    if: inputs.no-cache != 'true'
+    id: cache-restore
+    uses: actions/cache/restore@v4
+    with:
+      path: |
+        ${{ amd64_cachepath }}
+        ${{ arm64_cachepath }}
+      key: images-${{ steps.get-date.outputs.date }}
+
+  - name: Download images from server
+    id: web-download
+    if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
+    run: |
+      mkdir imgs/
+      wget -O- $AMD64_SOURCE | gzip -d > $AMD64_DESTPATH
+      wget -O- $ARM64_SOURCE | gzip -d > $ARM64_DESTPATH
+    env:
+      AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
+      AMD64_DESTPATH: ${{ amd64_cachepath }}
+      ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
+      ARM64_DESTPATH: ${{ arm64_cachepath }}
+
+  - name: Cache the downloaded images
+    if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
+    id: cache-save
+    uses: actions/cache/restore@v4
+    with:
+      path: |
+        ${{ amd64_cachepath }}
+        ${{ arm64_cachepath }}
+      key: images-${{ steps.get-date.outputs.date }}
+
+  - name: Make sure desired directory exists + ends with a slash
+    id: safe-path
+    run: |
+      [[ "${PATH}" != */ ]] && PATH="${PATH}/" # ensure $PATH ends with slash
+      mkdir -p $PATH
+      echo "path=$PATH" >> $GITHUB_OUTPUT
+    env:
+      PATH: ${{ inputs.path }}
+    outputs:
+      path: The path with exactly one trailing slash at the end.
+
+  - name: Move images into desired directory, remove the cache directory
+    if: (steps.cache-restore.outcome == 'success') && (steps.cache-restore.outputs.cache-hit)
+    run: |
+      mv ${{ amd64_cachepath }} ${{ amd64_path }}
+      mv ${{ arm64_cachepath }} ${{ arm64_path }}

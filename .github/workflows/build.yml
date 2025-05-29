@@ -1,41 +1,42 @@
 name: Build .wsl image
+
 on:
   push:
     branches: [release]
+
 jobs:
+
   build_and_release_image:
     runs-on: ubuntu-latest
     permissions:
       contents: write # allow workflow to create releases
       pages: write
     env:
-        AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
-        ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
         CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes, with trailing slash
         CLOUD_CONFIG_REPO_FILE_PATH: 995_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo
     steps:
-    
-      - name: Download the base Ubuntu image
-        run: |
-          mkdir imgs/
-          wget -O- $AMD64_SOURCE | gzip -d > imgs/amd64.wsl
-          wget -O- $ARM64_SOURCE | gzip -d > imgs/arm64.wsl
           
+      - name: Get the base images
+        id: get-images
+        uses: ./.github/actions/get_ubuntu_image
+        with:
+          path: ./imgs/
+
       - name: Make the files in this commit available to the current directory
         uses: actions/checkout@v4
         with:
-          path: repo/
+          path: ./repo/
         
       - name: Add the cloud-init file to the images
         run: |
           PATTERN='^[.+\\]?\/' # match from beginning to the last '/' not preceded by a '\'
           REPLACEMENT="${DEST_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
           SED_EXPRESSION="s/$PATTERN/$REPLACEMENT/"
-          tar --append -f imgs/amd64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
-          tar --append -f imgs/arm64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
+          tar --append -vf imgs/amd64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
+          tar --append -vf imgs/arm64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
         env:
           DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }} 
-          SOURCE_FILE: repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
+          SOURCE_FILE: ./repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
       - name: Create short version of commit SHA-1
         uses: 2428392/gh-truncate-string-action@v1
@@ -62,9 +63,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: imgs/amd64.wsl
-          asset_name: amd64.wsl
-          asset_content_type: application/tar
+          asset_path: ${{ steps.get-images.outputs.amd64_path }}
+          asset_name: ITSC-3146-Windows-amd64.wsl
+          asset_content_type: application/gzip
 
       - name: "Upload Release Files: arm64"
         uses: actions/upload-release-asset@v1
@@ -72,6 +73,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: imgs/arm64.wsl
-          asset_name: arm64.wsl
-          asset_content_type: application/tar
+          asset_path: ${{ steps.get-images.outputs.arm64_path }}
+          asset_name: ITSC-3146-Windows-arm64.wsl
+          asset_content_type: application/gzip
+
+      - name: Show file state (for debugging build script)
+        run: |
+          ls -a -r ./
