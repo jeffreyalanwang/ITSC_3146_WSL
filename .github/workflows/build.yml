@@ -78,5 +78,6 @@ jobs:
           asset_content_type: application/gzip
 
       - name: Show file state (for debugging build script)
+        if: always()
         run: |
           ls -a -r ./
