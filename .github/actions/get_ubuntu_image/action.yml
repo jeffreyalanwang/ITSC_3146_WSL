@@ -19,10 +19,6 @@ outputs:
     value: ${{ env.arm64_path }}
 runs:
   using: "composite"
-  env:
-    amd64_filename: amd64.wsl
-    arm64_filename: arm64.wsl
-    cache_dir: ./get_ubuntu_image_cache_dir/ # Location of the images when interacting with the cache
   steps:
     - name: Get current date + time
       id: get-date
@@ -49,15 +45,16 @@ runs:
     - name: Generate paths
       id: make-paths
       run: |
-        echo "amd64_path=${dest_dir}${amd64_fn}" >> $GITHUB_OUTPUT
-        echo "arm64_path=${dest_dir}${arm64_fn}" >> $GITHUB_OUTPUT
+        echo "amd64_path=${dest_dir}${amd64_filename}" >> $GITHUB_OUTPUT
+        echo "arm64_path=${dest_dir}${arm64_filename}" >> $GITHUB_OUTPUT
         echo "amd64_cachepath=${cache_dir}${amd64_fn}" >> $GITHUB_OUTPUT
         echo "arm64_cachepath=${cache_dir}${arm64_fn}" >> $GITHUB_OUTPUT
       env:
+        # Turns out, these strings are only needed for this step.
+        amd64_filename: amd64.wsl
+        arm64_filename: arm64.wsl
         dest_dir: ${{ steps.safe-path.outputs.path }}
-        cache_dir: ${{ env.cache_dir }}
-        amd64_fn: ${{ env.amd64_filename }}
-        arm64_fn: ${{ env.arm64_filename }}
+        cache_dir: ./get_ubuntu_image_cache_dir/ # Location of the images when interacting with the cache
       outputs:
         amd64_path: Final path + name of the x86_64 image.
         arm64_path: Final path + name of the ARM64 image.
