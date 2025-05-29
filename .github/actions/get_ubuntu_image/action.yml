@@ -36,11 +36,11 @@ runs:
       id: safe-path
       shell: bash
       run: |
-        [[ "${PATH}" != */ ]] && PATH="${PATH}/" # ensure $PATH ends with slash
-        mkdir -p $PATH
-        echo "path=$PATH" >> $GITHUB_OUTPUT
+        [[ "${path}" != */ ]] && path="${path}/" # ensure $path ends with slash
+        mkdir -p $path
+        echo "path=$path" >> $GITHUB_OUTPUT
       env:
-        PATH: ${{ inputs.path }}
+        path: ${{ inputs.path }}
       # outputs:
       # path: The path with exactly one trailing slash at the end.
 
