@@ -5,6 +5,9 @@ on:
 jobs:
   build_and_release_image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # allow workflow to create releases
+      pages: write
     env:
         AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
         ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
@@ -14,8 +17,9 @@ jobs:
     
       - name: Download the base Ubuntu image
         run: |
-          wget -O imgs/amd64.wsl $AMD64_SOURCE
-          wget -O imgs/arm64.wsl $ARM64_SOURCE
+          mkdir imgs/
+          wget -O- $AMD64_SOURCE | gzip -d > imgs/amd64.wsl
+          wget -O- $ARM64_SOURCE | gzip -d > imgs/arm64.wsl
           
       - name: Make the files in this commit available to the current directory
         uses: actions/checkout@v4
@@ -24,20 +28,50 @@ jobs:
         
       - name: Add the cloud-init file to the images
         run: |
-          tar --append -f imgs/amd64.wsl --transform '$SED_EXPRESSION' $SOURCE_FILE
-          tar --append -f imgs/arm64.wsl --transform '$SED_EXPRESSION' $SOURCE_FILE
+          PATTERN='^[.+\\]?\/' # match from beginning to the last '/' not preceded by a '\'
+          REPLACEMENT="${DEST_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
+          SED_EXPRESSION="s/$PATTERN/$REPLACEMENT/"
+          tar --append -f imgs/amd64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
+          tar --append -f imgs/arm64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
         env:
-          SED_EXPRESSION: ${{ format('s/^.*\//{0}/', vars.CLOUD_CONFIG_DEST_DIR_PATH) }} # replace the directory part with the dest_dir_path
-          SOURCE_FILE: ${{ join('repo/', vars.CLOUD_CONFIG_REPO_FILE_PATH) }}
+          DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }} 
+          SOURCE_FILE: repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
+
+      - name: Create short version of commit SHA-1
+        uses: 2428392/gh-truncate-string-action@v1
+        id: truncatedSha
+        with:
+          stringToTruncate: ${{ github.sha }}
+          maxLength: 7
 
       - name: Create Release
+        id: create_release
         uses: actions/create-release@latest
-        with:
-          tag_name: ${{ vars.VERSION_ID }}
-          release_name: Release ${{ vars.VERSION_ID }}
-          draft: false
-          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION_ID: ${{ join('v0.0.', github.ref) }}
-        
+          VERSION_ID: v0.0.${{ steps.truncatedSha.outputs.string }}
+        with:
+          tag_name: ${{ env.VERSION_ID }}
+          release_name: Release ${{ env.VERSION_ID }}
+          draft: false
+          prerelease: false
+
+      - name: "Upload Release Files: amd64"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: imgs/amd64.wsl
+          asset_name: amd64.wsl
+          asset_content_type: application/tar
+
+      - name: "Upload Release Files: arm64"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: imgs/arm64.wsl
+          asset_name: arm64.wsl
+          asset_content_type: application/tar
