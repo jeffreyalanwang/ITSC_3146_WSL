@@ -15,8 +15,8 @@ jobs:
       - name: Download the base Ubuntu image
         run: |
           mkdir imgs/
-          wget -O imgs/amd64.wsl $AMD64_SOURCE
-          wget -O imgs/arm64.wsl $ARM64_SOURCE
+          wget -O- $AMD64_SOURCE | gzip -d > imgs/amd64.wsl
+          wget -O- $ARM64_SOURCE | gzip -d > imgs/arm64.wsl
           
       - name: Make the files in this commit available to the current directory
         uses: actions/checkout@v4
