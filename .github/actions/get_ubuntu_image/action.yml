@@ -27,9 +27,9 @@ runs:
         echo "date=$DATE_STR" >> $GITHUB_OUTPUT
         TIME_STR = `date '+%s'`
         echo "time=$TIME_STR" >> $GITHUB_OUTPUT
-      outputs:
-        date: 'The current date as a string with no spaces.'
-        time: 'The current time as epoch (seconds).'
+      # outputs:
+      # date: 'The current date as a string with no spaces.'
+      # time: 'The current time as epoch (seconds).'
 
     - name: Make sure desired directory exists + ends with a slash
       id: safe-path
@@ -39,8 +39,8 @@ runs:
         echo "path=$PATH" >> $GITHUB_OUTPUT
       env:
         PATH: ${{ inputs.path }}
-      outputs:
-        path: The path with exactly one trailing slash at the end.
+      # outputs:
+      # path: The path with exactly one trailing slash at the end.
 
     - name: Generate paths
       id: make-paths
@@ -55,11 +55,11 @@ runs:
         arm64_filename: arm64.wsl
         dest_dir: ${{ steps.safe-path.outputs.path }}
         cache_dir: ./get_ubuntu_image_cache_dir/ # Location of the images when interacting with the cache
-      outputs:
-        amd64_path: Final path + name of the x86_64 image.
-        arm64_path: Final path + name of the ARM64 image.
-        amd64_cachepath: Path + name of the x86_64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.amd64_filename) }}
-        arm64_cachepath: Path + name of the ARM64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.arm64_filename) }}
+      # outputs:
+      # amd64_path: Final path + name of the x86_64 image.
+      # arm64_path: Final path + name of the ARM64 image.
+      # amd64_cachepath: Path + name of the x86_64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.amd64_filename) }}
+      # arm64_cachepath: Path + name of the ARM64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.arm64_filename) }}
 
     - name: Restore cached images
       id: cache-restore
