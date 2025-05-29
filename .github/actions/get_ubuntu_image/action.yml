@@ -54,8 +54,8 @@ runs:
       run: |
         echo "amd64_path=${dest_dir}${amd64_filename}" >> $GITHUB_OUTPUT
         echo "arm64_path=${dest_dir}${arm64_filename}" >> $GITHUB_OUTPUT
-        echo "amd64_cachepath=${cache_dir}${amd64_fn}" >> $GITHUB_OUTPUT
-        echo "arm64_cachepath=${cache_dir}${arm64_fn}" >> $GITHUB_OUTPUT
+        echo "amd64_cachepath=${cache_dir}${amd64_filename}" >> $GITHUB_OUTPUT
+        echo "arm64_cachepath=${cache_dir}${arm64_filename}" >> $GITHUB_OUTPUT
       env:
         # Turns out, these strings are only needed for this step.
         amd64_filename: amd64.wsl
@@ -76,7 +76,7 @@ runs:
         path: |
           ${{ steps.make-paths.outputs.amd64_cachepath }}
           ${{ steps.make-paths.outputs.arm64_cachepath }}
-        key: images-${{ steps.get-date.outputs.date }}
+        key: ubuntu_images-${{ steps.get-date.outputs.date }}
 
     - name: Download images from server
       id: web-download
@@ -99,7 +99,7 @@ runs:
         path: |
           ${{ steps.make-paths.outputs.amd64_cachepath }}
           ${{ steps.make-paths.outputs.arm64_cachepath }}
-        key: images-${{ steps.get-date.outputs.date }}
+        key: ubuntu_images-${{ steps.get-date.outputs.date }}
 
     - name: Move images into desired directory
       if: (steps.cache-restore.outcome == 'success') && (steps.cache-restore.outputs.cache-hit)
