@@ -39,8 +39,8 @@ jobs:
           SOURCE_FILE: ./repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
       - name: Create short version of commit SHA-1
-        uses: 2428392/gh-truncate-string-action@v1
         id: truncatedSha
+        uses: 2428392/gh-truncate-string-action@v1
         with:
           stringToTruncate: ${{ github.sha }}
           maxLength: 7

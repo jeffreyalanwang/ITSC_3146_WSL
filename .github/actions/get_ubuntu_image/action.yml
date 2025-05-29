@@ -62,8 +62,8 @@ runs:
         arm64_cachepath: Path + name of the ARM64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.arm64_filename) }}
 
     - name: Restore cached images
-      if: inputs.no-cache != 'true'
       id: cache-restore
+      if: inputs.no-cache != 'true'
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -85,8 +85,8 @@ runs:
         ARM64_DESTPATH: ${{ steps.make-paths.outputs.arm64_cachepath }}
 
     - name: Cache the downloaded images
-      if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
       id: cache-save
+      if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
       uses: actions/cache/restore@v4
       with:
         path: |
