@@ -6,7 +6,7 @@ on:
 
 jobs:
 
-  build_and_release_image:
+  build_and_release_images:
     runs-on: ubuntu-latest
     permissions:
       contents: write # allow workflow to create releases
@@ -23,7 +23,7 @@ jobs:
           
       - name: Get the base images
         id: get-images
-        uses: ./repo/.github/actions/get_ubuntu_image
+        uses: ./repo/.github/actions/get_ubuntu_images
         with:
           path: ./imgs/
 
@@ -88,3 +88,8 @@ jobs:
         if: always()
         run: |
           ls -a -R ./
+
+      - name: "Debug: ls ~/"
+        if: always()
+        run: |
+          ls -a -R ~/

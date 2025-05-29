@@ -1,4 +1,4 @@
-get_ubuntu_image:
+get_ubuntu_images:
 name: 'Obtain base Ubuntu images'
 description: 'From cache or from online'
 inputs:
@@ -44,7 +44,7 @@ runs:
         echo "cache=$cache" >> $GITHUB_OUTPUT
       env:
         path: ${{ inputs.path }}
-        cache: ~/get_ubuntu_image_working_dir/
+        cache: ~/get_ubuntu_images_working_dir/
       # outputs:
       # path: The input path with exactly one trailing slash at the end.
       # cache: Location of the images when interacting with the cache
@@ -95,7 +95,7 @@ runs:
     - name: Cache the downloaded images
       id: cache-save
       if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
-      uses: actions/cache/restore@v4
+      uses: actions/cache/save@v4
       with:
         path: |
           ${{ steps.make-paths.outputs.amd64_cachepath }}
