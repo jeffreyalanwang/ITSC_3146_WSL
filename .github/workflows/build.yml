@@ -31,7 +31,7 @@ jobs:
           tar --append -f imgs/amd64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
           tar --append -f imgs/arm64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
         env:
-          DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH) }} 
+          DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }} 
           SOURCE_FILE: ${{ join('repo/', env.CLOUD_CONFIG_REPO_FILE_PATH) }}
 
       - name: Create Release
