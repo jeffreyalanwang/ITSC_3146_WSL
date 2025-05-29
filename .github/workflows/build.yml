@@ -33,12 +33,12 @@ jobs:
 
       - name: Create Release
         uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_ID: ${{ join('v0.0.', github.ref) }}
         with:
           tag_name: ${{ vars.VERSION_ID }}
           release_name: Release ${{ vars.VERSION_ID }}
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION_ID: ${{ join('v0.0.', github.ref) }}
         
