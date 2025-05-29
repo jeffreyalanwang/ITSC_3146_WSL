@@ -26,7 +26,7 @@ runs:
       run: |
         DATE_STR=`date '+%F'`
         echo "date=$DATE_STR" >> $GITHUB_OUTPUT
-        TIME_STR = `date '+%s'`
+        TIME_STR =`date '+%s'`
         echo "time=$TIME_STR" >> $GITHUB_OUTPUT
       # outputs:
       # date: 'The current date as a string with no spaces.'
