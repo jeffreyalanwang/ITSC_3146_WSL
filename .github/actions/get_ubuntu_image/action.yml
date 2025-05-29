@@ -5,7 +5,7 @@ inputs:
   no-cache:
     description: 'Whether to allow accessing a recent cached version'
     required: false
-    default: false
+    default: true
   path:
     description: 'Directory in which to place the images'
     required: false
