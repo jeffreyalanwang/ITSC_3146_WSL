@@ -92,4 +92,4 @@ jobs:
       - name: "Debug: ls ~/"
         if: always()
         run: |
-          ls -a -R ~/
+          ls -R ~/
