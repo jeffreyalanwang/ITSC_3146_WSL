@@ -33,7 +33,7 @@ runs:
       [[ "${archive_location}" != */ ]] && archive_location="${archive_location}/"
       echo "in_archive_location=$archive_location" >> $GITHUB_OUTPUT
     env:
-      working_dir: ~/add_archive_file_working_dir/
+      working_dir: $HOME/add_archive_file_working_dir/
       archive_location: ${{ inputs.archive-hierarchy-location }}
     # outputs:
     # working_dir: Location of the working directory, which exists, ending with a slash.

@@ -44,7 +44,7 @@ runs:
         echo "cache=$cache" >> $GITHUB_OUTPUT
       env:
         path: ${{ inputs.path }}
-        cache: ~/get_ubuntu_images_working_dir/
+        cache: $HOME/get_ubuntu_images_working_dir/
       # outputs:
       # path: The input path with exactly one trailing slash at the end.
       # cache: Location of the images when interacting with the cache
@@ -84,8 +84,8 @@ runs:
       if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
       shell: bash
       run: |
-        wget --no-verbose -O- $AMD64_SOURCE > $AMD64_DESTPATH
-        wget --no-verbose -O- $ARM64_SOURCE > $ARM64_DESTPATH
+        wget --no-verbose $AMD64_SOURCE -O $AMD64_DESTPATH
+        wget --no-verbose $ARM64_SOURCE -O $ARM64_DESTPATH
       env:
         AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
         AMD64_DESTPATH: ${{ steps.make-paths.outputs.amd64_cachepath }}
