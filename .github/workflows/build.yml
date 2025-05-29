@@ -25,8 +25,8 @@ jobs:
         
       - name: Add the cloud-init file to the images
         run: |
-          tar --append -f imgs/amd64.wsl --transform '$SED_EXPRESSION' $SOURCE_FILE
-          tar --append -f imgs/arm64.wsl --transform '$SED_EXPRESSION' $SOURCE_FILE
+          tar --append -f imgs/amd64.wsl --transform $SED_EXPRESSION $SOURCE_FILE
+          tar --append -f imgs/arm64.wsl --transform $SED_EXPRESSION $SOURCE_FILE
         env:
           SED_EXPRESSION: ${{ format('s/^.*\//{0}/', vars.CLOUD_CONFIG_DEST_DIR_PATH) }} # replace the directory part with the dest_dir_path
           SOURCE_FILE: ${{ join('repo/', vars.CLOUD_CONFIG_REPO_FILE_PATH) }}
