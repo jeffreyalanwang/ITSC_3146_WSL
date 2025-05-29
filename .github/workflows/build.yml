@@ -15,17 +15,17 @@ jobs:
         CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes, with trailing slash
         CLOUD_CONFIG_REPO_FILE_PATH: 995_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo
     steps:
-          
-      - name: Get the base images
-        id: get-images
-        uses: ./.github/actions/get_ubuntu_image
-        with:
-          path: ./imgs/
 
       - name: Make the files in this commit available to the current directory
         uses: actions/checkout@v4
         with:
           path: ./repo/
+          
+      - name: Get the base images
+        id: get-images
+        uses: ./repo/.github/actions/get_ubuntu_image
+        with:
+          path: ./imgs/
         
       - name: Add the cloud-init file to the images
         run: |
