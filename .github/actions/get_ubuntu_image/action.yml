@@ -13,10 +13,10 @@ inputs:
 outputs:
   amd64_path:
     description: 'The path, including name, to the amd64 image.'
-    value: ${{ env.amd64_path }}
+    value: ${{ steps.make-paths.outputs.amd64_path }}
   arm64_path:
     description: 'The path, including name, to the ARM image.'
-    value: ${{ env.arm64_path }}
+    value: ${{ steps.make-paths.outputs.arm64_path }}
 runs:
   using: "composite"
   steps:
@@ -98,9 +98,9 @@ runs:
           ${{ steps.make-paths.outputs.arm64_cachepath }}
         key: images-${{ steps.get-date.outputs.date }}
 
-    - name: Move images into desired directory, remove the cache directory
+    - name: Move images into desired directory
       if: (steps.cache-restore.outcome == 'success') && (steps.cache-restore.outputs.cache-hit)
       shell: bash
       run: |
-        mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ amd64_path }}
-        mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ arm64_path }}
+        mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ steps.make-paths.outputs.amd64_path }}
+        mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ steps.make-paths.outputs.arm64_path }}
