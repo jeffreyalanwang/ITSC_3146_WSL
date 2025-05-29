@@ -83,7 +83,7 @@ runs:
       if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
       shell: bash
       run: |
-        wget --no-verbose $AMD64_SOURCE -O $ARM64_DESTPATH
+        wget --no-verbose $AMD64_SOURCE -O $AMD64_DESTPATH
         wget --no-verbose $ARM64_SOURCE -O $ARM64_DESTPATH
       env:
         AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
