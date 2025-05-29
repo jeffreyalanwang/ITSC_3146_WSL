@@ -22,15 +22,7 @@ runs:
   env:
     amd64_filename: amd64.wsl
     arm64_filename: arm64.wsl
-
-    # Final locations of the images
-    amd64_path: ${{ format("{0}{1}", inputs.path, env.amd64_filename) }}
-    arm64_path: ${{ format("{0}{1}", inputs.path, env.arm64_filename) }}
-
-    # Locations of the images when interacting with the cache
-    cache_dir: ./get_ubuntu_image_cache_dir/
-    amd64_cachepath: ${{ format("{0}{1}", env.cache_dir, env.amd64_filename) }}
-    arm64_cachepath: ${{ format("{0}{1}", env.cache_dir, env.arm64_filename) }}
+    cache_dir: ./get_ubuntu_image_cache_dir/ # Location of the images when interacting with the cache
   steps:
 
   - name: Get current date + time
@@ -44,39 +36,6 @@ runs:
       date: 'The current date as a string with no spaces.'
       time: 'The current time as epoch (seconds).'
 
-  - name: Restore cached images
-    if: inputs.no-cache != 'true'
-    id: cache-restore
-    uses: actions/cache/restore@v4
-    with:
-      path: |
-        ${{ amd64_cachepath }}
-        ${{ arm64_cachepath }}
-      key: images-${{ steps.get-date.outputs.date }}
-
-  - name: Download images from server
-    id: web-download
-    if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
-    run: |
-      mkdir imgs/
-      wget -O- $AMD64_SOURCE | gzip -d > $AMD64_DESTPATH
-      wget -O- $ARM64_SOURCE | gzip -d > $ARM64_DESTPATH
-    env:
-      AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
-      AMD64_DESTPATH: ${{ amd64_cachepath }}
-      ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
-      ARM64_DESTPATH: ${{ arm64_cachepath }}
-
-  - name: Cache the downloaded images
-    if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
-    id: cache-save
-    uses: actions/cache/restore@v4
-    with:
-      path: |
-        ${{ amd64_cachepath }}
-        ${{ arm64_cachepath }}
-      key: images-${{ steps.get-date.outputs.date }}
-
   - name: Make sure desired directory exists + ends with a slash
     id: safe-path
     run: |
@@ -88,8 +47,59 @@ runs:
     outputs:
       path: The path with exactly one trailing slash at the end.
 
+  - name: Generate paths
+    id: make-paths
+    run: |
+      echo "amd64_path=${dest_dir}${amd64_fn}" >> $GITHUB_OUTPUT
+      echo "arm64_path=${dest_dir}${arm64_fn}" >> $GITHUB_OUTPUT
+      echo "amd64_cachepath=${cache_dir}${amd64_fn}" >> $GITHUB_OUTPUT
+      echo "arm64_cachepath=${cache_dir}${arm64_fn}" >> $GITHUB_OUTPUT
+    env:
+      dest_dir: ${{ steps.safe-path.outputs.path }}
+      cache_dir: ${{ env.cache_dir }}
+      amd64_fn: ${{ env.amd64_filename }}
+      arm64_fn: ${{ env.arm64_filename }}
+    outputs:
+      amd64_path: Final path + name of the x86_64 image.
+      arm64_path: Final path + name of the ARM64 image.
+      amd64_cachepath: Path + name of the x86_64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.amd64_filename) }}
+      arm64_cachepath: Path + name of the ARM64 image when interacting with the cache. ${{ format("{0}{1}", env.cache_dir, env.arm64_filename) }}
+
+  - name: Restore cached images
+    if: inputs.no-cache != 'true'
+    id: cache-restore
+    uses: actions/cache/restore@v4
+    with:
+      path: |
+        ${{ steps.make-paths.outputs.amd64_cachepath }}
+        ${{ steps.make-paths.outputs.arm64_cachepath }}
+      key: images-${{ steps.get-date.outputs.date }}
+
+  - name: Download images from server
+    id: web-download
+    if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
+    run: |
+      mkdir imgs/
+      wget -O- $AMD64_SOURCE | gzip -d > $AMD64_DESTPATH
+      wget -O- $ARM64_SOURCE | gzip -d > $ARM64_DESTPATH
+    env:
+      AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
+      AMD64_DESTPATH: ${{ steps.make-paths.outputs.amd64_cachepath }}
+      ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
+      ARM64_DESTPATH: ${{ steps.make-paths.outputs.arm64_cachepath }}
+
+  - name: Cache the downloaded images
+    if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
+    id: cache-save
+    uses: actions/cache/restore@v4
+    with:
+      path: |
+        ${{ steps.make-paths.outputs.amd64_cachepath }}
+        ${{ steps.make-paths.outputs.arm64_cachepath }}
+      key: images-${{ steps.get-date.outputs.date }}
+
   - name: Move images into desired directory, remove the cache directory
     if: (steps.cache-restore.outcome == 'success') && (steps.cache-restore.outputs.cache-hit)
     run: |
-      mv ${{ amd64_cachepath }} ${{ amd64_path }}
-      mv ${{ arm64_cachepath }} ${{ arm64_path }}
+      mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ amd64_path }}
+      mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ arm64_path }}
