@@ -32,17 +32,21 @@ runs:
       # date: 'The current date as a string with no spaces.'
       # time: 'The current time as epoch (seconds).'
 
-    - name: Make sure desired directory exists + ends with a slash
-      id: safe-path
+    - name: Make sure desired directories exist + end with a slash
+      id: safe-paths
       shell: bash
       run: |
         [[ "${path}" != */ ]] && path="${path}/" # ensure $path ends with slash
         mkdir -p $path
+        [[ "${cache}" != */ ]] && cache="${cache}/"
+        mkdir -p $cache
         echo "path=$path" >> $GITHUB_OUTPUT
       env:
         path: ${{ inputs.path }}
+        cache: ./get_ubuntu_image_cache_dir/
       # outputs:
-      # path: The path with exactly one trailing slash at the end.
+      # path: The input path with exactly one trailing slash at the end.
+      # cache: Location of the images when interacting with the cache
 
     - name: Generate paths
       id: make-paths
@@ -56,8 +60,8 @@ runs:
         # Turns out, these strings are only needed for this step.
         amd64_filename: amd64.wsl
         arm64_filename: arm64.wsl
-        dest_dir: ${{ steps.safe-path.outputs.path }}
-        cache_dir: ./get_ubuntu_image_cache_dir/ # Location of the images when interacting with the cache
+        dest_dir: ${{ steps.safe-paths.outputs.path }}
+        cache_dir: ${{ steps.safe-paths.outputs.cache }}
       # outputs:
       # amd64_path: Final path + name of the x86_64 image.
       # arm64_path: Final path + name of the ARM64 image.
@@ -79,8 +83,8 @@ runs:
       if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
       shell: bash
       run: |
-        wget -O- $AMD64_SOURCE | gzip -d > $AMD64_DESTPATH
-        wget -O- $ARM64_SOURCE | gzip -d > $ARM64_DESTPATH
+        wget --no-verbose -O- $AMD64_SOURCE | gzip -d > $AMD64_DESTPATH
+        wget --no-verbose -O- $ARM64_SOURCE | gzip -d > $ARM64_DESTPATH
       env:
         AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
         AMD64_DESTPATH: ${{ steps.make-paths.outputs.amd64_cachepath }}
