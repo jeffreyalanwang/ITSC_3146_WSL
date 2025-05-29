@@ -5,6 +5,9 @@ on:
 jobs:
   build_and_release_image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # allow workflow to create releases
+      pages: write
     env:
         AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
         ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
@@ -34,14 +37,41 @@ jobs:
           DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }} 
           SOURCE_FILE: ${{ join('repo/', env.CLOUD_CONFIG_REPO_FILE_PATH) }}
 
+      - name: Create short version of commit SHA-1
+        uses: 2428392/gh-truncate-string-action@v1
+        id: truncatedSha
+        with:
+          stringToTruncate: ${{ github.sha }}
+          maxLength: 7
+
       - name: Create Release
+        id: create_release
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION_ID: ${{ join('v0.0.', github.ref) }}
+          VERSION_ID: ${{ join('v0.0.', steps.truncatedSha.outputs.string) }}
         with:
           tag_name: ${{ env.VERSION_ID }}
           release_name: Release ${{ env.VERSION_ID }}
           draft: false
           prerelease: false
-        
+
+      - name: "Upload Release Files: amd64"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: imgs/amd64.wsl
+          asset_name: amd64.wsl
+          asset_content_type: application/tar
+
+      - name: "Upload Release Files: arm64"
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: imgs/arm64.wsl
+          asset_name: arm64.wsl
+          asset_content_type: application/tar
