@@ -14,6 +14,7 @@ jobs:
     
       - name: Download the base Ubuntu image
         run: |
+          mkdir imgs/
           wget -O imgs/amd64.wsl $AMD64_SOURCE
           wget -O imgs/arm64.wsl $ARM64_SOURCE
           
