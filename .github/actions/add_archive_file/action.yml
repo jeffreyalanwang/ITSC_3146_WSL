@@ -1,0 +1,102 @@
+add_archive_file:
+name: 'Add file to tar archive'
+description: |
+  Add a file to a tar archive.
+  Does not need to have any file extension.
+  Works on archives with gzip compression.
+inputs:
+  archive-path:
+    description: 'Path of the tar archive.'
+    required: true
+  is-gzip-compressed:
+    description: 'Whether the tar archive is compressed.'
+    required: true
+  file-path:
+    description: 'Path of the file to add to the tar archive.'
+    required: true
+  archive-hierarchy-location:
+    description: 'Path of the file inside of the tar archive, once it has been inserted.'
+    required: true
+outputs:
+  result_archive_path:
+    description: 'The path, including name, to the archive.'
+    value: ${{ inputs.archive-path }}
+runs:
+  using: "composite"
+  steps:
+  - name: Make a working directory available, format archive-hierarchy-location
+    id: safe-paths
+    run: |
+      [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure $working_dir ends with slash
+      mkdir -p $working_dir
+      echo "working_dir=$working_dir" >> $GITHUB_OUTPUT
+      [[ "${archive_location}" != */ ]] && archive_location="${archive_location}/"
+      echo "in_archive_location=$archive_location" >> $GITHUB_OUTPUT
+    env:
+      working_dir: ~/add_archive_file_working_dir/
+      archive_location: ${{ inputs.archive-hierarchy-location }}
+    # outputs:
+    # working_dir: Location of the working directory, which exists, ending with a slash.
+    # in_archive_location: archive-hierarchy-location, ending with exactly one slash.
+
+  - name: Unzip the archive
+    id: unzip-archive
+    if: ${{ inputs.is-gzip-compressed }}
+    run: |
+      # match from beginning to the last '/' not preceded by a '\'
+      # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
+      PATTERN='^(.*[^\\])?\/' # extended regex version
+
+      # Same filename, new location
+      unzip_location="${archive/$PATTERN/$directory}"
+
+      # Unzip
+      cat $archive | gzip -d > $unzip_location
+
+      # Provide our result archive location
+      echo "decompressed=$unzip_location" >> $GITHUB_OUTPUT
+    env:
+      archive: ${{ inputs.archive-path }}
+      directory: ${{ steps.safe-paths.outputs.working_dir }}
+    # outputs:
+    # decompressed: Location of the unzipped archive.
+
+  - name: Provide the unzipped archive path
+    id: which-archive
+    run: |
+      if [[ "$new_path_was_created" == 'true' ]]; then
+        echo "path=$created_path" >> $GITHUB_OUTPUT
+      else
+        echo "path=$original_path" >> $GITHUB_OUTPUT
+      fi
+    env:
+      new_path_was_created: ${{ inputs.is-gzip-compressed }}
+      original_path: ${{ inputs.archive-path }}
+      created_path: ${{ steps.unzip-archive.outputs.decompressed }}
+    # outputs:
+    # path: Location of the unzipped archive (always available, unlike unzip-archive).
+    
+  - name: Add the file to the archive
+    run: |
+      # match from beginning to the last '/' not preceded by a '\'
+      # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
+      PATTERN='^(.*[^\\])?\/' # extended regex version
+
+      # replace with destination directory
+      REPLACEMENT="${DEST_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
+
+      SED_EXPRESSION="s/$PATTERN/$REPLACEMENT/"
+      tar --append -vf $amd64_d_archive --transform "$SED_EXPRESSION" "$SOURCE_FILE"
+    env:
+      SOURCE_FILE: ${{ inputs.file-path }}
+      DEST_DIR: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem
+      non_gzip_archive: ${{ steps.which-archive.outputs.path }}
+
+  - name: Rezip the archive, return to original location
+    if: ${{ inputs.is-gzip-compressed }}
+    id: rezip-archive
+    run: |
+      cat $decompressed | gzip > $original_archive_path
+    env:
+      original_archive_path: ${{ inputs.archive-path }}
+      decompressed: ${{ steps.unzip-archive.outputs.decompressed }}

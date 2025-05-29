@@ -12,7 +12,7 @@ jobs:
       contents: write # allow workflow to create releases
       pages: write
     env:
-        CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes, with trailing slash
+        CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes
         CLOUD_CONFIG_REPO_FILE_PATH: 995_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo
     steps:
 
@@ -27,57 +27,23 @@ jobs:
         with:
           path: ./imgs/
 
-      - name: Unzip the images
-        id: unzip-images
-        run: |
-          # Get the original file locations
-          amd64_decompressed_archive=${amd64_archive}_working
-          arm64_decompressed_archive=${arm64_archive}_working
-          # Unzip
-          cat $amd64_archive | gzip -d > $amd64_decompressed_archive
-          cat $arm64_archive | gzip -d > $arm64_decompressed_archive
-          # Provide our result paths
-          echo "amd64_decompressed_archive=$amd64_decompressed_archive" >> $GITHUB_OUTPUT
-          echo "arm64_decompressed_archive=$arm64_decompressed_archive" >> $GITHUB_OUTPUT
-        env:
-          amd64_archive: ${{ steps.get-images.outputs.amd64_path }}
-          arm64_archive: ${{ steps.get-images.outputs.arm64_path }}
-        # outputs:
-        # amd64_decompressed_archive: Location of the gunzipped amd64 archive.
-        # arm64_decompressed_archive: Location of the gunzipped arm64 archive.
-        
-      - name: Add the cloud-init file to the images
-        run: |
-          # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
-          PATTERN='^(.*[^\\])?\/' # match from beginning to the last '/' not preceded by a '\'
-          REPLACEMENT="${DEST_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
-          SED_EXPRESSION="s/$PATTERN/$REPLACEMENT/"
-          tar --append -vf $amd64_d_archive --transform "$SED_EXPRESSION" "$SOURCE_FILE"
-          tar --append -vf $arm64_d_archive --transform "$SED_EXPRESSION" "$SOURCE_FILE"
-        env:
-          DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }} # directory within the image's filesystem
-          SOURCE_FILE: ./repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
-          amd64_d_archive: ${{ steps.unzip-images.outputs.amd64_decompressed_archive }}
-          arm64_d_archive: ${{ steps.unzip-images.outputs.arm64_decompressed_archive }}
+      - name: "Add the .tar files: amd64"
+        id: inject-file-amd64
+        uses: ./repo/.github/actions/add_archive_file
+        with:
+          archive-path: ${{ steps.get-images.outputs.amd64_path }}
+          is-gzip-compressed: true
+          archive-hierarchy-location: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }}
+          file-path: ${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
-      - name: Rezip the images
-        id: rezip-images
-        run: |
-          # Get the original file locations
-          amd64_final_archive=${amd64_d_archive/%working/}_out
-          arm64_final_archive=${arm64_d_archive/%working/}_out
-          # Unzip
-          cat $amd64_d_archive | gzip > ${amd64_final_archive}
-          cat $arm64_d_archive | gzip > ${arm64_final_archive}
-          # Provide our result paths
-          echo "amd64_final_archive=$amd64_final_archive" >> $GITHUB_OUTPUT
-          echo "arm64_final_archive=$arm64_final_archive" >> $GITHUB_OUTPUT
-        env:
-          amd64_d_archive: ${{ steps.unzip-images.outputs.amd64_decompressed_archive }}
-          arm64_d_archive: ${{ steps.unzip-images.outputs.arm64_decompressed_archive }}
-        # outputs:
-        # amd64_final_archive: Location of the recompressed amd64 archive (ends in .wsl).
-        # arm64_final_archive: Location of the recompressed amd64 archive (ends in .wsl).
+      - name: "Add the .tar files: arm64"
+        id: inject-file-arm64
+        uses: ./repo/.github/actions/add_archive_file
+        with:
+          archive-path: ${{ steps.get-images.outputs.arm64_path }}
+          is-gzip-compressed: true
+          archive-hierarchy-location: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }}
+          file-path: ${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
       - name: Create short version of commit SHA-1
         id: truncatedSha
@@ -104,7 +70,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.rezip-images.outputs.amd64_final_archive }}
+          asset_path: ${{ steps.inject-file-amd64.outputs.result_archive_path }}
           asset_name: ITSC-3146-Windows-amd64.wsl
           asset_content_type: application/gzip
 
@@ -114,7 +80,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.rezip-images.outputs.arm64_final_archive }}
+          asset_path: ${{ steps.inject-file-arm64.outputs.result_archive_path }}
           asset_name: ITSC-3146-Windows-arm64.wsl
           asset_content_type: application/gzip
 

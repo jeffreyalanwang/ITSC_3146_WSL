@@ -20,7 +20,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Get current date + time
+    - name: Get current date (for up-to-date cache values)
       id: get-date
       shell: bash
       run: |
@@ -38,12 +38,13 @@ runs:
       run: |
         [[ "${path}" != */ ]] && path="${path}/" # ensure $path ends with slash
         mkdir -p $path
+        echo "path=$path" >> $GITHUB_OUTPUT
         [[ "${cache}" != */ ]] && cache="${cache}/"
         mkdir -p $cache
-        echo "path=$path" >> $GITHUB_OUTPUT
+        echo "cache=$cache" >> $GITHUB_OUTPUT
       env:
         path: ${{ inputs.path }}
-        cache: ./get_ubuntu_image_cache_dir/
+        cache: ~/get_ubuntu_image_working_dir/
       # outputs:
       # path: The input path with exactly one trailing slash at the end.
       # cache: Location of the images when interacting with the cache
