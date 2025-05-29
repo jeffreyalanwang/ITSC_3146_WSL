@@ -24,7 +24,6 @@ runs:
     arm64_filename: arm64.wsl
     cache_dir: ./get_ubuntu_image_cache_dir/ # Location of the images when interacting with the cache
   steps:
-
     - name: Get current date + time
       id: get-date
       run: |
