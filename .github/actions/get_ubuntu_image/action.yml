@@ -83,8 +83,8 @@ runs:
       if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
       shell: bash
       run: |
-        wget --no-verbose -O- $AMD64_SOURCE | gzip -d > $AMD64_DESTPATH
-        wget --no-verbose -O- $ARM64_SOURCE | gzip -d > $ARM64_DESTPATH
+        wget --no-verbose $AMD64_SOURCE -O $ARM64_DESTPATH
+        wget --no-verbose $ARM64_SOURCE -O $ARM64_DESTPATH
       env:
         AMD64_SOURCE: 'https://releases.ubuntu.com/noble/ubuntu-24.04.2-wsl-amd64.wsl'
         AMD64_DESTPATH: ${{ steps.make-paths.outputs.amd64_cachepath }}
@@ -102,7 +102,6 @@ runs:
         key: ubuntu_images-${{ steps.get-date.outputs.date }}
 
     - name: Move images into desired directory
-      if: (steps.cache-restore.outcome == 'success') && (steps.cache-restore.outputs.cache-hit)
       shell: bash
       run: |
         mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ steps.make-paths.outputs.amd64_path }}
