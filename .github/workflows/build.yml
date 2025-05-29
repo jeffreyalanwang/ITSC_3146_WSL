@@ -35,7 +35,7 @@ jobs:
           tar --append -f imgs/arm64.wsl --transform "$SED_EXPRESSION" "$SOURCE_FILE"
         env:
           DEST_DIR: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }} 
-          SOURCE_FILE: ${{ join('repo/', env.CLOUD_CONFIG_REPO_FILE_PATH) }}
+          SOURCE_FILE: repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
       - name: Create short version of commit SHA-1
         uses: 2428392/gh-truncate-string-action@v1
@@ -49,7 +49,7 @@ jobs:
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION_ID: ${{ join('v0.0.', steps.truncatedSha.outputs.string) }}
+          VERSION_ID: v0.0.${{ steps.truncatedSha.outputs.string }}
         with:
           tag_name: ${{ env.VERSION_ID }}
           release_name: Release ${{ env.VERSION_ID }}
