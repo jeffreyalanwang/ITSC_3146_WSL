@@ -88,10 +88,16 @@ jobs:
         if: always()
         run: |
           # ls -a -R ./ # find can better filter out extraneous dirs
-          find . -path ./repo/.git/objects -prune -o -print
+          find . \
+            -path './repo/.git' -prune -o \
+            -print
 
       - name: "Debug output 2/2: ls ~/"
         if: always()
         run: |
           # ls -R ~/ # find can better filter out extraneous dirs
-          find ~ -path ~/actions-runner -prune -o -path ~/work -prune -o -print
+          find ~ \
+            -path ~/actions-runner -prune -o \
+            -path ~/.nvm -prune -o \
+            -path ~/.dotnet -prune -o \
+            -print
