@@ -27,11 +27,15 @@ runs:
   - name: Collect some info now so we can perform asserts at the end
     id: pre-assert
     shell: bash
-    run:
+    run: |
       ## Collect some info now so we can perform asserts at the end
-      archive_size="$(du --block-size=1K $archive_path)"
+
+      # calculate archive_size
+      archive_size="$(du --block-size=1K $archive_path | cut -f1)"
       echo "archive_size=$archive_size" >> $GITHUB_OUTPUT
-      additions_size="$(du --block-size=1K $file_additions)"
+
+      # calculate additions_size
+      additions_size="$(du --block-size=1K $file_additions | cut -f1)"
       echo "additions_size=$additions_size" >> $GITHUB_OUTPUT
     env:
       archive_path: ${{ inputs.archive-path }}
@@ -46,13 +50,15 @@ runs:
     run: |
       ## Make a working directory available, format archive-hierarchy-location
 
-      [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure $working_dir ends with slash
-      working_dir=${working_dir/\~/$HOME}
-      mkdir -p $working_dir
-      echo "working_dir=$working_dir" >> $GITHUB_OUTPUT
+      # $working_dir
+      [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure path string ends with slash
+      working_dir=${working_dir/\~/$HOME}                           # replace '~' with home directory (can't figure out how to get this to happen automatically)
+      mkdir -p $working_dir                                         # ensure path exists
+      echo "working_dir=$working_dir" >> $GITHUB_OUTPUT             # output
 
-      [[ "${archive_location}" != */ ]] && archive_location="${archive_location}/"
-      echo "in_archive_location=$archive_location" >> $GITHUB_OUTPUT
+      # $archive_location
+      [[ "${archive_location}" != */ ]] && archive_location="${archive_location}/"  # ensure path string ends with slash
+      echo "in_archive_location=$archive_location" >> $GITHUB_OUTPUT                # output
     env:
       working_dir: ~/add_archive_file_working_dir/
       archive_location: ${{ inputs.archive-hierarchy-location }}
@@ -67,13 +73,13 @@ runs:
     run: |
       ## Unzip the archive
 
-      # Form a regex to capture a file path's parent directory
-      # match from beginning to the last '/' not preceded by a '\'
-      # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
-      PATTERN='^(.*[^\\])?\/' # extended regex version
+      # Form a regex to capture a file path's parent directory path
+      # (match from beginning to the last '/' that is not escaped by a '\')
+      # match_directory_pattern="^\(.*\[^\\\]\)\?\/"    # non-extended regex version
+      match_directory_pattern='^(.*[^\\])?\/'           # extended regex version
 
-      # Same filename, new location
-      unzip_location="${archive/$PATTERN/$directory}"
+      # Form the destination path: does not change filename
+      unzip_location="${archive/$match_directory_pattern/$directory}"
 
       # Unzip
       cat $archive | gzip -d > $unzip_location
@@ -89,11 +95,11 @@ runs:
     # outputs:
     # decompressed: Location of the unzipped archive.
 
-  - name: Provide the unzipped archive path
-    id: which-archive
+  - name: Provide the unzipped archive path (did we unzip the archive to a new place?)
+    id: where-archive
     shell: bash
     run: |
-      ## Provide the unzipped archive path
+      ## Provide the unzipped archive path (did we unzip the archive to a new place?)
 
       if [[ "$new_path_was_created" == 'true' ]]; then
         echo "path=$created_path" >> $GITHUB_OUTPUT
@@ -124,7 +130,7 @@ runs:
     env:
       SOURCE_FILE: ${{ inputs.file-path }}
       INSERT_DIR: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem
-      non_gzip_archive: ${{ steps.which-archive.outputs.path }}
+      non_gzip_archive: ${{ steps.where-archive.outputs.path }}
 
   - name: Rezip the archive, return to original location
     if: ${{ inputs.is-gzip-compressed }}
@@ -142,12 +148,13 @@ runs:
     shell: bash
     run: |
       ## Assert we changed the size of our archive
-      echo "Note: if archive is gzipped, size increase may be smaller than size of added file."
+      echo "Note: if archive is gzipped, size increase of archive may be smaller than size of added file."
+      final_archive_size_1K="$(du --block-size=1K $archive_path | cut -f1)"
       echo "Size of original archive: ${original_archive_size_1K} K"
       echo "Size of added file: ${expected_size_increase_1K} K"
-      echo "New archive size: $(du -h --block-size=1K $archive_path)"
+      echo "New archive size: ${final_archive_size_1K} K"
 
-      if [ "$(du --block-size=1K $archive_path | cut -f1)" -le "$(original_archive_size_1K)" ]; then
+      if [ "$final_archive_size_1K" -le "$original_archive_size_1K" ]; then
         echo "Assertion failed: new archive is not larger than old archive" >&2
         exit 1
       fi

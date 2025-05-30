@@ -13,7 +13,7 @@ jobs:
       pages: write
     env:
         CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes
-        CLOUD_CONFIG_REPO_FILE_PATH: 995_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo
+        CLOUD_CONFIG_REPO_FILE_PATH: 995_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo, beginning without slash
     steps:
 
       - name: Make the files in this commit available to the current directory
@@ -34,7 +34,7 @@ jobs:
           archive-path: ${{ steps.get-images.outputs.amd64_path }}
           is-gzip-compressed: true
           archive-hierarchy-location: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }}
-          file-path: ${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
+          file-path: ./repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
       - name: "Add the .tar files (2/2: arm64)"
         id: inject-file-arm64
@@ -43,7 +43,7 @@ jobs:
           archive-path: ${{ steps.get-images.outputs.arm64_path }}
           is-gzip-compressed: true
           archive-hierarchy-location: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }}
-          file-path: ${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
+          file-path: ./repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
       - name: Create short version of commit SHA-1
         id: truncatedSha
@@ -90,7 +90,6 @@ jobs:
           # ls -a -R ./ # find can better filter out extraneous dirs
           find . \
             -path './repo/.git' -prune -o \
-            -path './repo/.github' -prune -o \
             -print
 
       - name: "Debug output 2/2: ls ~/"
