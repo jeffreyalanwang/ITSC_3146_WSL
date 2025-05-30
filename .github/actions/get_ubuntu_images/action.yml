@@ -28,7 +28,7 @@ runs:
       id: get-date
       shell: bash
       run: |
-        ## Get current date (for up-to-date cache values)
+        ## Get current date and time (for up-to-date cache values)
         DATE_STR=`date '+%F'`
         echo "date=$DATE_STR" | tee -a $GITHUB_OUTPUT
         TIME_STR=`date '+%s'`
