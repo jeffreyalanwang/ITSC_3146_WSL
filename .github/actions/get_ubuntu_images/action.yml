@@ -35,16 +35,18 @@ runs:
     - name: Make sure desired directories exist + end with a slash
       id: safe-paths
       shell: bash
-      run: |
+      run: |        
+        [[ "${cache}" != */ ]] && cache="${cache}/"
+        cache=${cache/\~/$HOME}
+        mkdir -p $cache
+        echo "cache=$cache" >> $GITHUB_OUTPUT
+
         [[ "${path}" != */ ]] && path="${path}/" # ensure $path ends with slash
         mkdir -p $path
         echo "path=$path" >> $GITHUB_OUTPUT
-        [[ "${cache}" != */ ]] && cache="${cache}/"
-        mkdir -p $cache
-        echo "cache=$cache" >> $GITHUB_OUTPUT
       env:
         path: ${{ inputs.path }}
-        cache: $HOME/get_ubuntu_images_working_dir/
+        cache: ~/get_ubuntu_images_working_dir/
       # outputs:
       # path: The input path with exactly one trailing slash at the end.
       # cache: Location of the images when interacting with the cache
