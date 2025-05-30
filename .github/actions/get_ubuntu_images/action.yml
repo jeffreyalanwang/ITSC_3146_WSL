@@ -73,7 +73,7 @@ runs:
 
     - name: Restore cached images
       id: cache-restore
-      if: inputs.no-cache != 'true'
+      if: ${{ inputs.no-cache != 'true' }}
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -83,7 +83,7 @@ runs:
 
     - name: Download images from server
       id: web-download
-      if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
+      if: ${{ (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
         wget --no-verbose $AMD64_SOURCE -O $AMD64_DESTPATH
@@ -96,7 +96,7 @@ runs:
 
     - name: Cache the downloaded images
       id: cache-save
-      if: (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true')
+      if: ${{ (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true') }}
       uses: actions/cache/save@v4
       with:
         path: |
