@@ -130,7 +130,6 @@ runs:
         mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ steps.make-paths.outputs.arm64_path }}
 
     - name: Assert we created two files and they are large enough
-      if: always()
       shell: bash
       run: |
         ## Assert we created two files and they are reasonably large

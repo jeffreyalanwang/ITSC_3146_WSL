@@ -156,7 +156,6 @@ runs:
       decompressed_path: ${{ steps.unzip-archive.outputs.decompressed_path }}
 
   - name: Assert we changed the size of our archive
-    if: always()
     shell: bash
     run: |
       ## Assert we changed the size of our archive
