@@ -90,6 +90,7 @@ jobs:
           # ls -a -R ./ # find can better filter out extraneous dirs
           find . \
             -path './repo/.git' -prune -o \
+            -path './repo/.github' -prune -o \
             -print
 
       - name: "Debug output 2/2: ls ~/"
@@ -98,6 +99,9 @@ jobs:
           # ls -R ~/ # find can better filter out extraneous dirs
           find ~ \
             -path ~/actions-runner -prune -o \
+            -path ~/work -prune -o \
+            -path ~/.cargo -prune -o \
+            -path ~/.rustup -prune -o \
             -path ~/.nvm -prune -o \
             -path ~/.dotnet -prune -o \
             -print
