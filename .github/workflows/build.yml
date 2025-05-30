@@ -87,9 +87,11 @@ jobs:
       - name: "Debug: ls ./"
         if: always()
         run: |
-          ls -a -R ./
+          # ls -a -R ./ # find can better filter out extraneous dirs
+          find . -path ./repo/.git/objects -prune -o -print
 
       - name: "Debug: ls ~/"
         if: always()
         run: |
-          ls -R ~/
+          # ls -R ~/ # find can better filter out extraneous dirs
+          find ~ -path ~/actions-runner -prune -o -path ~/work -prune -print
