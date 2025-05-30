@@ -109,7 +109,7 @@ runs:
         ## Clear any existing cache, so we do not have redundant data
         gh cache delete --all
       env:
-        GH_TOKEN: ${{ input.token }}
+        GH_TOKEN: ${{ inputs.token }}
         GH_REPO: ${{ github.repository }}
 
     - name: Cache the downloaded images
