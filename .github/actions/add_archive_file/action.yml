@@ -78,22 +78,28 @@ runs:
       # match_directory_pattern="^\(.*\[^\\\]\)\?\/"    # non-extended regex version
       match_directory_pattern='^(.*[^\\])?\/'           # extended regex version
 
-      # Form the destination path: does not change filename
-      unzip_location="${archive/$match_directory_pattern/$directory}"
+      # Form the destination path where we unzip to (does not change filename)
+      decompressed_path="${gzipped_path/$match_directory_pattern/$working_directory}"
 
-      # Unzip
-      cat $archive | gzip -d > $unzip_location
+      # Debug output: location we will unzip to
+      echo "Decompressing to: $decompressed_path"
+      if [ -e "$decompressed_path" ]; then
+        echo "Note: file already exists at this path, replacing it."
+      fi
+
+      # Unzip to the temp location
+      cat $gzipped_path | gzip -d > $decompressed_path
       
-      # Debug output (show size and location)
-      ls -lh $unzip_location
+      # Debug output: show size and location
+      ls -lh $decompressed_path
 
       # Provide our result archive location
-      echo "decompressed=$unzip_location" >> $GITHUB_OUTPUT
+      echo "decompressed_path=$decompressed_path" >> $GITHUB_OUTPUT
     env:
-      archive: ${{ inputs.archive-path }}
-      directory: ${{ steps.safe-paths.outputs.working_dir }}
+      gzipped_path: ${{ inputs.archive-path }}
+      working_directory: ${{ steps.safe-paths.outputs.working_dir }}
     # outputs:
-    # decompressed: Location of the unzipped archive.
+    # decompressed_path: Location of the unzipped archive.
 
   - name: Provide the unzipped archive path (did we unzip the archive to a new place?)
     id: where-archive
@@ -109,7 +115,7 @@ runs:
     env:
       new_path_was_created: ${{ inputs.is-gzip-compressed }}
       original_path: ${{ inputs.archive-path }}
-      created_path: ${{ steps.unzip-archive.outputs.decompressed }}
+      created_path: ${{ steps.unzip-archive.outputs.decompressed_path }}
     # outputs:
     # path: Location of the unzipped archive (always available, unlike unzip-archive).
     
@@ -138,10 +144,10 @@ runs:
     shell: bash
     run: |
       ## Rezip the archive, return to original location
-      cat $decompressed | gzip > $original_archive_path
+      cat $decompressed_path | gzip > $original_archive_path
     env:
       original_archive_path: ${{ inputs.archive-path }}
-      decompressed: ${{ steps.unzip-archive.outputs.decompressed }}
+      decompressed_path: ${{ steps.unzip-archive.outputs.decompressed_path }}
 
   - name: Assert we changed the size of our archive
     if: always()
