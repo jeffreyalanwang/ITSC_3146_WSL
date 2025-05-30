@@ -24,6 +24,7 @@ runs:
       id: get-date
       shell: bash
       run: |
+        ## Get current date (for up-to-date cache values)
         DATE_STR=`date '+%F'`
         echo "date=$DATE_STR" >> $GITHUB_OUTPUT
         TIME_STR=`date '+%s'`
@@ -35,7 +36,8 @@ runs:
     - name: Make sure desired directories exist + end with a slash
       id: safe-paths
       shell: bash
-      run: |        
+      run: |
+        ## Make sure desired directories exist + end with a slash
         [[ "${cache}" != */ ]] && cache="${cache}/"
         cache=${cache/\~/$HOME}
         mkdir -p $cache
@@ -55,6 +57,7 @@ runs:
       id: make-paths
       shell: bash
       run: |
+        ## Generate paths
         echo "amd64_path=${dest_dir}${amd64_filename}" >> $GITHUB_OUTPUT
         echo "arm64_path=${dest_dir}${arm64_filename}" >> $GITHUB_OUTPUT
         echo "amd64_cachepath=${cache_dir}${amd64_filename}" >> $GITHUB_OUTPUT
@@ -86,6 +89,7 @@ runs:
       if: ${{ (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true') }}
       shell: bash
       run: |
+        ## Download images from server
         wget --no-verbose $AMD64_SOURCE -O $AMD64_DESTPATH
         wget --no-verbose $ARM64_SOURCE -O $ARM64_DESTPATH
       env:
@@ -107,5 +111,6 @@ runs:
     - name: Move images into desired directory
       shell: bash
       run: |
+        ## Move images into desired directory
         mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ steps.make-paths.outputs.amd64_path }}
         mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ steps.make-paths.outputs.arm64_path }}
