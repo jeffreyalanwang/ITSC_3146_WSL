@@ -53,6 +53,7 @@ runs:
 
       # Same filename, new location
       unzip_location="${archive/$PATTERN/$directory}"
+      echo "Unzipped archive destination: $unzip_location"
 
       # Unzip
       cat $archive | gzip -d > $unzip_location
