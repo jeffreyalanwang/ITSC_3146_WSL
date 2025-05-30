@@ -29,7 +29,7 @@ runs:
     shell: bash
     run: |
       [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure $working_dir ends with slash
-      cache=${cache/\~/$HOME}
+      working_dir=${working_dir/\~/$HOME}
       mkdir -p $working_dir
       echo "working_dir=$working_dir" >> $GITHUB_OUTPUT
 
