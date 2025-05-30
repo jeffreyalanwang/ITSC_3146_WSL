@@ -26,6 +26,7 @@ runs:
   steps:
   - name: Make a working directory available, format archive-hierarchy-location
     id: safe-paths
+    shell: bash
     run: |
       [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure $working_dir ends with slash
       cache=${cache/\~/$HOME}
@@ -44,6 +45,7 @@ runs:
   - name: Unzip the archive
     id: unzip-archive
     if: ${{ inputs.is-gzip-compressed }}
+    shell: bash
     run: |
       # match from beginning to the last '/' not preceded by a '\'
       # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
@@ -65,6 +67,7 @@ runs:
 
   - name: Provide the unzipped archive path
     id: which-archive
+    shell: bash
     run: |
       if [[ "$new_path_was_created" == 'true' ]]; then
         echo "path=$created_path" >> $GITHUB_OUTPUT
@@ -79,6 +82,7 @@ runs:
     # path: Location of the unzipped archive (always available, unlike unzip-archive).
     
   - name: Add the file to the archive
+    shell: bash
     run: |
       # match from beginning to the last '/' not preceded by a '\'
       # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
@@ -97,6 +101,7 @@ runs:
   - name: Rezip the archive, return to original location
     if: ${{ inputs.is-gzip-compressed }}
     id: rezip-archive
+    shell: bash
     run: |
       cat $decompressed | gzip > $original_archive_path
     env:
