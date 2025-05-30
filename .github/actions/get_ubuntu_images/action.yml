@@ -26,9 +26,9 @@ runs:
       run: |
         ## Get current date (for up-to-date cache values)
         DATE_STR=`date '+%F'`
-        echo "date=$DATE_STR" >> $GITHUB_OUTPUT
+        echo "date=$DATE_STR" | tee -a $GITHUB_OUTPUT
         TIME_STR=`date '+%s'`
-        echo "time=$TIME_STR" >> $GITHUB_OUTPUT
+        echo "time=$TIME_STR" | tee -a $GITHUB_OUTPUT
       # outputs:
       # date: 'The current date as a string with no spaces.'
       # time: 'The current time as epoch (seconds).'
@@ -41,11 +41,11 @@ runs:
         [[ "${cache}" != */ ]] && cache="${cache}/" # ensure path string ends with slash
         cache=${cache/\~/$HOME}                     # replace '~' with home directory (can't figure out how to get this to happen automatically)
         mkdir -p $cache                             # ensure path exists
-        echo "cache=$cache" >> $GITHUB_OUTPUT       # output
+        echo "cache=$cache" | tee -a $GITHUB_OUTPUT # output
 
         [[ "${path}" != */ ]] && path="${path}/"    # ensure path string ends with slash
         mkdir -p $path                              # ensure path exists
-        echo "path=$path" >> $GITHUB_OUTPUT         # output
+        echo "path=$path" | tee -a $GITHUB_OUTPUT   # output
       env:
         path: ${{ inputs.path }}
         cache: ~/get_ubuntu_images_working_dir/
@@ -58,10 +58,10 @@ runs:
       shell: bash
       run: |
         ## Generate paths
-        echo "amd64_path=${dest_dir}${amd64_filename}" >> $GITHUB_OUTPUT
-        echo "arm64_path=${dest_dir}${arm64_filename}" >> $GITHUB_OUTPUT
-        echo "amd64_cachepath=${cache_dir}${amd64_filename}" >> $GITHUB_OUTPUT
-        echo "arm64_cachepath=${cache_dir}${arm64_filename}" >> $GITHUB_OUTPUT
+        echo "amd64_path=${dest_dir}${amd64_filename}" | tee -a $GITHUB_OUTPUT
+        echo "arm64_path=${dest_dir}${arm64_filename}" | tee -a $GITHUB_OUTPUT
+        echo "amd64_cachepath=${cache_dir}${amd64_filename}" | tee -a $GITHUB_OUTPUT
+        echo "arm64_cachepath=${cache_dir}${arm64_filename}" | tee -a $GITHUB_OUTPUT
       env:
         # Turns out, these strings are only needed for this step.
         amd64_filename: amd64.wsl

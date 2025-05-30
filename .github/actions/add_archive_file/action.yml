@@ -32,11 +32,11 @@ runs:
 
       # calculate archive_size
       archive_size="$(du --block-size=1K $archive_path | cut -f1)"
-      echo "archive_size=$archive_size" >> $GITHUB_OUTPUT
+      echo "archive_size=$archive_size" | tee -a $GITHUB_OUTPUT
 
       # calculate additions_size
       additions_size="$(du --block-size=1K $file_additions | cut -f1)"
-      echo "additions_size=$additions_size" >> $GITHUB_OUTPUT
+      echo "additions_size=$additions_size" | tee -a $GITHUB_OUTPUT
     env:
       archive_path: ${{ inputs.archive-path }}
       file_additions: ${{ inputs.file-path }}
@@ -54,11 +54,11 @@ runs:
       [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure path string ends with slash
       working_dir=${working_dir/\~/$HOME}                           # replace '~' with home directory (can't figure out how to get this to happen automatically)
       mkdir -p $working_dir                                         # ensure path exists
-      echo "working_dir=$working_dir" >> $GITHUB_OUTPUT             # output
+      echo "working_dir=$working_dir" | tee -a $GITHUB_OUTPUT       # output
 
       # $archive_location
       [[ "${archive_location}" != */ ]] && archive_location="${archive_location}/"  # ensure path string ends with slash
-      echo "in_archive_location=$archive_location" >> $GITHUB_OUTPUT                # output
+      echo "in_archive_location=$archive_location" | tee -a $GITHUB_OUTPUT          # output
     env:
       working_dir: ~/add_archive_file_working_dir/
       archive_location: ${{ inputs.archive-hierarchy-location }}
@@ -75,7 +75,7 @@ runs:
 
       # Form a regex to capture a file path's parent directory path
       # (match from beginning to the last '/' that is not escaped by a '\')
-      # match_directory_pattern="^\(.*\[^\\\]\)\?\/"    # non-extended regex version
+      # match_directory_pattern='^\(.*\[^\\\]\)\?\/'    # non-extended regex version
       match_directory_pattern='^(.*[^\\])?\/'           # extended regex version
 
       # Form the destination path where we unzip to (does not change filename)
@@ -94,7 +94,7 @@ runs:
       ls -lh $decompressed_path
 
       # Provide our result archive location
-      echo "decompressed_path=$decompressed_path" >> $GITHUB_OUTPUT
+      echo "decompressed_path=$decompressed_path" | tee -a $GITHUB_OUTPUT
     env:
       gzipped_path: ${{ inputs.archive-path }}
       working_directory: ${{ steps.safe-paths.outputs.working_dir }}
@@ -108,9 +108,9 @@ runs:
       ## Provide the unzipped archive path (did we unzip the archive to a new place?)
 
       if [[ "$new_path_was_created" == 'true' ]]; then
-        echo "path=$created_path" >> $GITHUB_OUTPUT
+        echo "path=$created_path" | tee -a $GITHUB_OUTPUT
       else
-        echo "path=$original_path" >> $GITHUB_OUTPUT
+        echo "path=$original_path" | tee -a $GITHUB_OUTPUT
       fi
     env:
       new_path_was_created: ${{ inputs.is-gzip-compressed }}
@@ -124,18 +124,24 @@ runs:
     run: |
       ## Add the file to the archive
 
-      # match from beginning to the last '/' not preceded by a '\'
-      # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
-      PATTERN='^(.*[^\\])?\/' # extended regex version
+      # match: from beginning to the last '/' not preceded by a '\'
+      # match_directory_pattern='^\(.*\[^\\\]\)\?\/'  # non-extended regex version
+      match_directory_pattern='^(.*[^\\])?\/'         # extended regex version
+      echo "match_directory_pattern: $match_directory_pattern"
 
-      # replace with destination directory
-      REPLACEMENT="${INSERT_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
+      # replace with: destination directory
+      directory_in_archive="${directory_in_archive//[&\/\\]/\\&}" # escape all characters that would be special when present in the second part of a sed expression, below
+      echo "directory_in_archive: $directory_in_archive"
 
-      SED_EXPRESSION="s/$PATTERN/$REPLACEMENT/"
-      tar --append -vf $amd64_d_archive --transform "$SED_EXPRESSION" "$SOURCE_FILE"
+      # Form an expression telling tar to add the file at $directory_in_archive, not the directory in the GitHub Actions runner's filesystem
+      sed_expression="s/$match_directory_pattern/$directory_in_archive/"
+      echo "sed_expression: $sed_expression"
+
+      # Add the file
+      tar --append -vf $amd64_d_archive --transform "$sed_expression" "$source_file"
     env:
-      SOURCE_FILE: ${{ inputs.file-path }}
-      INSERT_DIR: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem
+      source_file: ${{ inputs.file-path }}
+      directory_in_archive: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem, ending with a slash
       non_gzip_archive: ${{ steps.where-archive.outputs.path }}
 
   - name: Rezip the archive, return to original location
