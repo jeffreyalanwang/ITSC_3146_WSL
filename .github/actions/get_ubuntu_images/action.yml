@@ -114,3 +114,25 @@ runs:
         ## Move images into desired directory
         mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ steps.make-paths.outputs.amd64_path }}
         mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ steps.make-paths.outputs.arm64_path }}
+
+    - name: Assert we created two files and they are large enough
+      if: always()
+      shell: bash
+      run: |
+        ## Assert we created two files and they are reasonably large
+        echo "File sizes:"
+        echo "$(du -h $amd64_path)"
+        echo "$(du -h $arm64_path)"
+        
+        if [ "$(du --block-size=1M $amd64_path | cut -f1)" -lt 200 ]; then
+          echo "Assertion failed: amd64 image size is under 200M" >&2
+          exit 1
+        fi
+        if [ "$(du --block-size=1M $arm64_path | cut -f1)" -lt 200 ]; then
+          echo "Assertion failed: ARM image size is under 200M5" >&2
+          exit 1
+        fi
+      env:
+        # make sure these match the expressions which define the action's output.
+        amd64_path: ${{ steps.make-paths.outputs.amd64_path }}
+        arm64_path: ${{ steps.make-paths.outputs.arm64_path }}

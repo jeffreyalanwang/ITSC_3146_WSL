@@ -24,6 +24,22 @@ outputs:
 runs:
   using: "composite"
   steps:
+  - name: Collect some info now so we can perform asserts at the end
+    id: pre-assert
+    shell: bash
+    run:
+      ## Collect some info now so we can perform asserts at the end
+      archive_size="$(du --block-size=1K $archive_path)"
+      echo "archive_size=$archive_size" >> $GITHUB_OUTPUT
+      additions_size="$(du --block-size=1K $file_additions)"
+      echo "additions_size=$additions_size" >> $GITHUB_OUTPUT
+    env:
+      archive_path: ${{ inputs.archive-path }}
+      file_additions: ${{ inputs.file-path }}
+    # outputs:
+    # archive_size: Size of original archive, divided by 1024 bytes, no K suffix.
+    # additions_size: Total size of files to add, divided by 1024 bytes, no K suffix.
+
   - name: Make a working directory available, format archive-hierarchy-location
     id: safe-paths
     shell: bash
@@ -101,13 +117,13 @@ runs:
       PATTERN='^(.*[^\\])?\/' # extended regex version
 
       # replace with destination directory
-      REPLACEMENT="${DEST_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
+      REPLACEMENT="${INSERT_DIR//[&\/\\]/\\&}" # escape all characters that are special for a replacement string
 
       SED_EXPRESSION="s/$PATTERN/$REPLACEMENT/"
       tar --append -vf $amd64_d_archive --transform "$SED_EXPRESSION" "$SOURCE_FILE"
     env:
       SOURCE_FILE: ${{ inputs.file-path }}
-      DEST_DIR: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem
+      INSERT_DIR: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem
       non_gzip_archive: ${{ steps.which-archive.outputs.path }}
 
   - name: Rezip the archive, return to original location
@@ -120,3 +136,24 @@ runs:
     env:
       original_archive_path: ${{ inputs.archive-path }}
       decompressed: ${{ steps.unzip-archive.outputs.decompressed }}
+
+  - name: Assert we changed the size of our archive
+    if: always()
+    shell: bash
+    run: |
+      ## Assert we changed the size of our archive
+      echo "Note: if archive is gzipped, size increase may be smaller than size of added file."
+      echo "Size of original archive: ${original_archive_size_1K} K"
+      echo "Size of added file: ${expected_size_increase_1K} K"
+      echo "New archive size: $(du -h --block-size=1K $archive_path)"
+
+      if [ "$(du --block-size=1K $archive_path | cut -f1)" -le "$(original_archive_size_1K)" ]; then
+        echo "Assertion failed: new archive is not larger than old archive" >&2
+        exit 1
+      fi
+    env:
+      # make sure these were calculated with --block-size=1K.
+      original_archive_size_1K: ${{ steps.pre-assert.outputs.archive_size }}
+      expected_size_increase_1K: ${{ steps.pre-assert.outputs.additions_size }}
+      # make sure this matches the expression which defines the action's output.
+      archive_path: ${{ inputs.archive-path }}

@@ -27,7 +27,7 @@ jobs:
         with:
           path: ./imgs/
 
-      - name: "Add the .tar files: amd64"
+      - name: "Add the .tar files (1/2: amd64)"
         id: inject-file-amd64
         uses: ./repo/.github/actions/add_archive_file
         with:
@@ -36,7 +36,7 @@ jobs:
           archive-hierarchy-location: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }}
           file-path: ${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
-      - name: "Add the .tar files: arm64"
+      - name: "Add the .tar files (2/2: arm64)"
         id: inject-file-arm64
         uses: ./repo/.github/actions/add_archive_file
         with:
@@ -64,7 +64,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: "Upload Release Files: amd64"
+      - name: "Upload Release Files (1/2: amd64)"
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -74,7 +74,7 @@ jobs:
           asset_name: ITSC-3146-Windows-amd64.wsl
           asset_content_type: application/gzip
 
-      - name: "Upload Release Files: arm64"
+      - name: "Upload Release Files (2/2: arm64)"
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -84,13 +84,13 @@ jobs:
           asset_name: ITSC-3146-Windows-arm64.wsl
           asset_content_type: application/gzip
 
-      - name: "Debug: ls ./"
+      - name: "Debug output 1/2: ls ./"
         if: always()
         run: |
           # ls -a -R ./ # find can better filter out extraneous dirs
           find . -path ./repo/.git/objects -prune -o -print
 
-      - name: "Debug: ls ~/"
+      - name: "Debug output 2/2: ls ~/"
         if: always()
         run: |
           # ls -R ~/ # find can better filter out extraneous dirs
