@@ -10,6 +10,10 @@ inputs:
     description: 'Directory in which to place the images'
     required: false
     default: './'
+  token:
+    description: 'GitHub token'
+    required: false
+    default: ${{ github.token }}
 outputs:
   amd64_path:
     description: 'The path, including name, to the amd64 image.'
@@ -105,7 +109,7 @@ runs:
         ## Clear any existing cache, so we do not have redundant data
         gh cache delete --all
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ input.token }}
         GH_REPO: ${{ github.repository }}
 
     - name: Cache the downloaded images
