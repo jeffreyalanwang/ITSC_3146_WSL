@@ -47,16 +47,19 @@ runs:
     if: ${{ inputs.is-gzip-compressed }}
     shell: bash
     run: |
+      # Form a regex to capture a file path's parent directory
       # match from beginning to the last '/' not preceded by a '\'
       # PATTERN="^\(.*\[^\\\]\)\?\/" # non-extended regex version
       PATTERN='^(.*[^\\])?\/' # extended regex version
 
       # Same filename, new location
       unzip_location="${archive/$PATTERN/$directory}"
-      echo "Unzipped archive destination: $unzip_location"
 
       # Unzip
       cat $archive | gzip -d > $unzip_location
+      
+      # Debug output (show size and location)
+      ls -lh $unzip_location
 
       # Provide our result archive location
       echo "decompressed=$unzip_location" >> $GITHUB_OUTPUT
