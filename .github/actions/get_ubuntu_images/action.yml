@@ -98,6 +98,16 @@ runs:
         ARM64_SOURCE: 'https://cdimages.ubuntu.com/releases/24.04.2/release/ubuntu-24.04.2-wsl-arm64.wsl'
         ARM64_DESTPATH: ${{ steps.make-paths.outputs.arm64_cachepath }}
 
+    - name: Clear any existing cache, so we do not have redundant data
+      if: ${{ (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true') }}
+      shell: bash
+      run: |
+        ## Clear any existing cache, so we do not have redundant data
+        gh cache delete --all
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_REPO: ${{ github.repository }}
+
     - name: Cache the downloaded images
       id: cache-save
       if: ${{ (steps.cache-restore.outcome == 'skipped') || (steps.cache-restore.outputs.cache-hit != 'true') }}
