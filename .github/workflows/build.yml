@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # allow workflow to create releases
+      actions: write # allow workflow to work with cache
       pages: write
     env:
         CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes

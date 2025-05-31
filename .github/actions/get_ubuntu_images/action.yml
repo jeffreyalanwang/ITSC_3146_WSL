@@ -11,7 +11,7 @@ inputs:
     required: false
     default: './'
   token:
-    description: 'GitHub token'
+    description: 'GitHub token. Must have permission to delete a GitHub Actions cache resource.'
     required: false
     default: ${{ github.token }}
 outputs:
@@ -107,7 +107,7 @@ runs:
       shell: bash
       run: |
         ## Clear any existing cache, so we do not have redundant data
-        gh cache delete --all
+        gh cache delete --all --succeed-on-no-caches
       env:
         GH_TOKEN: ${{ inputs.token }}
         GH_REPO: ${{ github.repository }}
