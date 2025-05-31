@@ -133,14 +133,13 @@ runs:
       shell: bash
       run: |
         ## Asserts
-
+        assert_header='===='
         echo "Checking our output files, at the following paths:"
         echo "amd64 image: $amd64_path"
         echo "ARM image: $arm64_path"
         
         # Assert we have exactly one instance of the two images in our repository's GitHub Actions cache
-        
-        echo "Repository cache keys that currently exist:"
+        echo "$assert_header Repository cache keys that currently exist:"
         caches="$(gh cache list)"
         echo "$caches"
         if [[ $(wc -l <<< "$caches") != "1" ]]; then
@@ -149,8 +148,7 @@ runs:
         fi
 
         # Assert we created two files and they are reasonably large
-
-        echo "File sizes:"
+        echo "$assert_header File sizes:"
         echo "$(du -h $amd64_path)"
         echo "$(du -h $arm64_path)"
         

@@ -223,39 +223,44 @@ runs:
     shell: bash
     run: |
       ## Asserts
-
-      echo "Checking our output file (provided at path $archive_path)"
+      assert_header='===='
+      echo "${assert_header}${assert_header} Checking our output file (provided at path $archive_path)"
       
       # Assert that we changed the size of our archive
+      
+      echo "$assert_header Checking the size of the archive..."
       echo "Note: if archive is gzipped, size increase of archive may be smaller than size of added file."
       final_archive_size_1K="$(du --block-size=1K --apparent-size $archive_path | cut -f1)"
       echo "Size of original archive: ${original_archive_size_1K} K"
       echo "Size of added file: ${additions_size_1K} K"
       echo "New archive size: ${final_archive_size_1K} K"
 
+      msg="Assertion failed: new archive is not larger than old archive"
       if [[ "$final_archive_size_1K" -le "$original_archive_size_1K" ]]; then
-        echo "Assertion failed: new archive is not larger than old archive" >&2
         if [[ "$output_is_gzipped" == 'true' ]]; then
-          echo "Not failing, because difference in size could be explained by compression" >&2
+          echo "Warning: $msg" >&2
+          echo "Continuing, because difference in size could be explained by compression" >&2
         else
+          echo "$msg" >&2
           exit 1
         fi
       fi
       sleep 1 # GitHub Actions has a quirk that logs stdout before an immediately preceding stderr output
+      echo "Assert success"
 
       # Assert that we created a valid archive
       if [[ $output_is_gzipped == 'true' ]]; then
-        echo "Checking if our output is a valid gzipped tar archive..."
+        echo "$assert_header Checking if our output is a valid gzipped tar archive..."
         tar -xz --to-stdout -f $archive_path >> /dev/null
-        echo "Success"
+        echo "Assert success"
       else
-        echo "Checking if our output is a valid tar archive..."
+        echo "$assert_header Checking if our output is a valid tar archive..."
         tar -x --to-stdout -f $archive_path >> /dev/null
-        echo "Success"
+        echo "Assert success"
       fi
 
       # Assert that we added the right number of files
-      echo "Checking what files we added to the archive..."
+      echo "$assert_header Checking the number of new files inside the archive..."
       path_new_archive_contents="$RUNNER_TEMP/new_archive_contents.txt"
       if [[ $output_is_gzipped == 'true' ]]; then
         tar -v -tzf $archive_path > $path_new_archive_contents
@@ -271,12 +276,14 @@ runs:
         echo "Assertion failed: expected 1 difference in file contents." >&2
         exit 1
       fi
+      echo "Assert success"
 
       # Assert that the files we added are pretty much the estimated size
+      echo "$assert_header Checking the size of new files inside the archive..."
       readarray new_files_array < <(cat "$differences_path" | grep '^> ' | sed 's/^> //')
       new_files_total_uncompressed_1K='0'
       for item in "${new_files_array[@]}"; do
-        echo "File in new archive: $item"
+        echo "File in new archive: ${item%$'\n'}" # remove ending newline from item
 
         # running total using var new_files_total_uncompressed_1K
         item_uncompressed_size_bytes="$(echo $item | awk '{print $3}')"
@@ -289,13 +296,14 @@ runs:
           exit 1
         fi
       done
+      echo "Total size of additions (in archive): $new_files_total_uncompressed_1K K"
       new_files_off_by_1K=$(( $new_files_total_uncompressed_1K - $additions_size_1K ))
       new_files_off_by_1K=${new_files_off_by_1K#-}            # absolute value
       if [[ "$new_files_off_by_1K" -gt $(( $additions_size_1K / 4 )) ]]; then
         echo "Assertion failed: size (in archive) of uncompressed additions differs by those files' original size by: $new_files_off_by_1K K" >&2
         exit 1
       fi
-      echo "Success"
+      echo "Assert success"
     env:
       output_is_gzipped: ${{ inputs.is-gzip-compressed }}
       path_to_original_archive_contents: ${{ steps.pre-assert.outputs.archive_contents_record }}
