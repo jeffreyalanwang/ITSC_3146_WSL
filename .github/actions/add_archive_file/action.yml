@@ -184,7 +184,9 @@ runs:
 
       # Add the file
 
+      echo "Adding to tar archive ${tar_archive} ..."
       tar --append -vf $tar_archive --transform "$sed_expression" "$source_file"
+      echo "Done"
 
     env:
       source_file: ${{ inputs.file-path }}
