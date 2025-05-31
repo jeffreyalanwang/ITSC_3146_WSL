@@ -288,7 +288,7 @@ runs:
         # running total using var new_files_total_uncompressed_1K
         item_uncompressed_size_bytes="$(echo $item | awk '{print $3}')"
         item_uncompressed_size_1K=$(( ( $item_uncompressed_size_bytes + ( 1024 / 2 ) ) / 1024 )) # du rounds up, so we do the same
-        new_files_total_uncompressed_1K=$(( $new_files_total_uncompressed_1K + $item_uncompressed_size_bytes ))
+        new_files_total_uncompressed_1K=$(( $new_files_total_uncompressed_1K + $item_uncompressed_size_1K ))
 
         # also check this file's individual size is not 0
         if [[ "$item_uncompressed_size_bytes" -eq '0' ]]; then
