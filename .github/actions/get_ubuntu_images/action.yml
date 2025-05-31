@@ -140,7 +140,7 @@ runs:
         
         # Assert we have exactly one instance of the two images in our repository's GitHub Actions cache
         
-        echo "Repository caches that currently exist:"
+        echo "Repository cache keys that currently exist:"
         caches="$(gh cache list)"
         echo "$caches"
         if [[ $(wc -l <<< "$caches") != "1" ]]; then
