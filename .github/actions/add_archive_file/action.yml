@@ -154,19 +154,22 @@ runs:
         '/'
       )
       expecteds=(
-        '${directory_in_archive}file'
-        '${directory_in_archive}file'
-        'file'
-        '${directory_in_archive}'
+        "${directory_in_archive}file"
+        "${directory_in_archive}file"
+        "file"
+        "${directory_in_archive}""
       )
       for i in {0..3}; do
-        echo "Testing input case #${i}:"
-        echo "${inputs[i]}"
+        input="${inputs[i]}"
+        expected="${expecteds[i]}"
 
-        output="${inputs[i]}"
-        if [[ "$output" != "${expecteds[i]}" ]]; then
+        echo "Testing input case #${i}:"
+        echo "$input"
+
+        output="$(sed -e \"$input\")"
+        if [[ "$output" != "$expected" ]]; then
           echo "Assertion failed: unexpected result when testing sed_expression." >&2
-          echo "Expected result: ${expecteds[i]}"
+          echo "Expected result: ${expected}"
           return 1
         fi
       done
