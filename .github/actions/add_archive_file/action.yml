@@ -73,13 +73,22 @@ runs:
     run: |
       ## Unzip the archive
 
-      # Form a regex to capture a file path's parent directory path
-      # (match from beginning to the last '/' that is not escaped by a '\')
-      # match_directory_pattern='^\(.*\[^\\\]\)\?\/'    # non-extended regex version
-      match_directory_pattern='^(.*[^\\])?\/'           # extended regex version
+      # match:
+      # from beginning to the last '/' not preceded by a '\'
+      # match_directory_pattern='^\(.*\[^\\\]\)\?\/'  # non-extended regex version
+      match_directory_pattern='^(.*[^\\])?\/'         # extended regex version
+      echo "match_directory_pattern: $match_directory_pattern"
 
-      # Form the destination path where we unzip to (does not change filename)
-      decompressed_path="${gzipped_path/$match_directory_pattern/$working_directory}"
+      # replace with:
+      # escape all characters that would be special when present in the second part of a sed expression: &, /, \
+      # using a preceding backslash: \
+      directory_escaped_for_sed="${working_directory//[&\/\\]/\\&}"
+      echo "directory_escaped_for_sed: $directory_escaped_for_sed"
+
+      sed_expression="s/$match_directory_pattern/$directory_escaped_for_sed/"
+      echo "sed_expression: $sed_expression"
+
+      decompressed_path="$("$gzipped_path" | sed -E "$sed_expression")"
 
       # Debug output: location we will unzip to.
       echo "Decompressing to: $decompressed_path"
