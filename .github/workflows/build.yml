@@ -14,7 +14,7 @@ jobs:
       pages: write
     env:
         CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes
-        CLOUD_CONFIG_REPO_FILE_PATH: 995_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo, beginning without slash
+        CLOUD_CONFIG_REPO_FILE_PATH: 99a_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo, beginning without slash
     steps:
 
       - name: Make the files in this commit available to the current directory
