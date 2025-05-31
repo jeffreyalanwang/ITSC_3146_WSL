@@ -58,13 +58,14 @@ runs:
 
       # $archive_location
       [[ "${archive_location}" != */ ]] && archive_location="${archive_location}/"  # ensure path string ends with slash
+      [[ "${archive_location}" == /* ]] && archive_location="${archive_location:1}" # ensure path string starts with no slash (like the rest of the files in the tar archive)
       echo "in_archive_location=$archive_location" | tee -a $GITHUB_OUTPUT          # output
     env:
       working_dir: ~/add_archive_file_working_dir/
       archive_location: ${{ inputs.archive-hierarchy-location }}
     # outputs:
     # working_dir: Location of the working directory, which exists, ending with a slash.
-    # in_archive_location: archive-hierarchy-location, ending with exactly one slash.
+    # in_archive_location: archive-hierarchy-location, starting with no slash, ending with exactly one slash.
 
   - name: Unzip the archive
     id: unzip-archive
@@ -189,7 +190,7 @@ runs:
 
     env:
       source_file: ${{ inputs.file-path }}
-      directory_in_archive: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem, ending with a slash
+      directory_in_archive: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem, starting with no slash, ending with a slash
       tar_archive: ${{ steps.where-archive.outputs.path }} # uncompressed
 
   - name: Rezip the archive, return to original location
