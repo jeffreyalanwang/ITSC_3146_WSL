@@ -236,7 +236,7 @@ runs:
       if [[ "$final_archive_size_1K" -le "$original_archive_size_1K" ]]; then
         echo "Assertion failed: new archive is not larger than old archive" >&2
         if [[ "$output_is_gzipped" == 'true' ]]; then
-          echo "Not failing, because difference in size could be explained by compression"
+          echo "Not failing, because difference in size could be explained by compression" >&2
         else
           exit 1
         fi
