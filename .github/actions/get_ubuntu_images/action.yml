@@ -3,9 +3,9 @@ name: 'Obtain base Ubuntu images'
 description: 'From cache or from online'
 inputs:
   no-cache:
-    description: 'Whether to allow accessing a recent cached version'
+    description: 'Whether to force a new download of the images.'
     required: false
-    default: true
+    default: false
   path:
     description: 'Directory in which to place the images'
     required: false
