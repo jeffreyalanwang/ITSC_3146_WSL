@@ -166,7 +166,7 @@ runs:
         "${directory_in_archive}file"
         "${directory_in_archive}file"
         "file"
-        "${directory_in_archive}""
+        "${directory_in_archive}"
       )
       for i in {0..3}; do
         input="${inputs[i]}"
