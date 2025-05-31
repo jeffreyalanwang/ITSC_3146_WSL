@@ -266,7 +266,7 @@ runs:
       diff $path_to_original_archive_contents $path_new_archive_contents | tee $differences_path
       differences_count="$(cat "$differences_path" | grep '^[^0-9-]' | wc -l)"
       echo "New archive has $differences_count added/removed filenames compared to original archive."
-      if [[ differences_count != '1' ]]; then
+      if [[ "$differences_count" != '1' ]]; then
         echo "Assertion failed: expected 1 difference in file contents." >&2
         exit 1
       fi
