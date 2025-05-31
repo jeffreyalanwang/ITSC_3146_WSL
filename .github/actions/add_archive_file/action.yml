@@ -75,8 +75,7 @@ runs:
 
       # match:
       # from beginning to the last '/' not preceded by a '\'
-      # match_directory_pattern='^\(.*\[^\\\]\)\?\/'  # non-extended regex version
-      match_directory_pattern='^(.*[^\\])?\/'         # extended regex version
+      match_directory_pattern='^(.*[^\\])?\/'                   # extended regex
       echo "match_directory_pattern: $match_directory_pattern"
 
       # replace with:
@@ -142,8 +141,7 @@ runs:
 
       # match:
       # from beginning to the last '/' not preceded by a '\'
-      # match_directory_pattern='^\(.*\[^\\\]\)\?\/'  # non-extended regex version
-      match_directory_pattern='^(.*[^\\])?\/'         # extended regex version
+      match_directory_pattern='^(.*[^\\])?\/'                   # extended regex
       echo "match_directory_pattern: $match_directory_pattern"
 
       # replace with:
@@ -185,7 +183,8 @@ runs:
       # Add the file
 
       echo "Adding to tar archive ${tar_archive} (displaying destination paths below)..."
-      tar --append -vf $tar_archive --transform "$sed_expression" "$source_file" --show-transformed-names
+      sed_expression="${sed_expression}x"
+      tar --append -vf $tar_archive --transform "${sed_expression}" "$source_file" --show-transformed-names
       echo "Done"
 
     env:
