@@ -172,8 +172,7 @@ runs:
         input="${inputs[i]}"
         expected="${expecteds[i]}"
 
-        echo "Testing input case #${i}:"
-        echo "$input"
+        echo "Testing input case #${i}: $input"
 
         output="$(echo "$input" | sed -E "$sed_expression")"
         if [[ "$output" != "$expected" ]]; then
@@ -185,11 +184,12 @@ runs:
 
       # Add the file
 
-      tar --append -vf $amd64_d_archive --transform "$sed_expression" "$source_file"
+      tar --append -vf $tar_archive --transform "$sed_expression" "$source_file"
+
     env:
       source_file: ${{ inputs.file-path }}
       directory_in_archive: ${{ steps.safe-paths.outputs.in_archive_location }} # directory within the archive's filesystem, ending with a slash
-      non_gzip_archive: ${{ steps.where-archive.outputs.path }}
+      tar_archive: ${{ steps.where-archive.outputs.path }} # uncompressed
 
   - name: Rezip the archive, return to original location
     if: ${{ inputs.is-gzip-compressed }}
