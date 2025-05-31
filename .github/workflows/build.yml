@@ -28,7 +28,7 @@ jobs:
         with:
           path: ./imgs/
 
-      - name: "Add the .tar files (1/2: amd64)"
+      - name: "Inject file into archive (1/2: amd64)"
         id: inject-file-amd64
         uses: ./repo/.github/actions/add_archive_file
         with:
@@ -37,7 +37,7 @@ jobs:
           archive-hierarchy-location: ${{ env.CLOUD_CONFIG_DEST_DIR_PATH }}
           file-path: ./repo/${{ env.CLOUD_CONFIG_REPO_FILE_PATH }}
 
-      - name: "Add the .tar files (2/2: arm64)"
+      - name: "Inject file into archive (2/2: arm64)"
         id: inject-file-arm64
         uses: ./repo/.github/actions/add_archive_file
         with:

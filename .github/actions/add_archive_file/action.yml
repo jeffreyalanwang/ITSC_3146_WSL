@@ -184,8 +184,8 @@ runs:
 
       # Add the file
 
-      echo "Adding to tar archive ${tar_archive} ..."
-      tar --append -vf $tar_archive --transform "$sed_expression" "$source_file"
+      echo "Adding to tar archive ${tar_archive} (displaying destination paths below)..."
+      tar --append -vf $tar_archive --transform "$sed_expression" "$source_file" --show-transformed-names
       echo "Done"
 
     env:
