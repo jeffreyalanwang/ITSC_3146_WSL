@@ -241,6 +241,7 @@ runs:
           exit 1
         fi
       fi
+      sleep 1 # GitHub Actions has a quirk that logs stdout before an immediately preceding stderr output
 
       # Assert that we created a valid archive
       if [[ $output_is_gzipped == 'true' ]]; then
