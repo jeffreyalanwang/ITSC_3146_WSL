@@ -263,7 +263,7 @@ runs:
       fi
       differences_path="$RUNNER_TEMP/archive_contents_difference.txt"
       echo "old archive contents <> new archive contents"
-      diff "$path_to_original_archive_contents" "$path_new_archive_contents" | tee "$differences_path"
+      { diff "$path_to_original_archive_contents" "$path_new_archive_contents" || diff_ret=$? ; } | tee "$differences_path"
       differences_count="$(cat "$differences_path" | grep '^[^0-9-]' | wc -l)"
       echo "New archive has $differences_count added/removed filenames compared to original archive."
       if [[ "$differences_count" != '1' ]]; then
