@@ -166,7 +166,7 @@ runs:
         echo "Testing input case #${i}:"
         echo "$input"
 
-        output="$(echo "$input" | sed -e "$sed_expression")"
+        output="$(echo "$input" | sed -E "$sed_expression")"
         if [[ "$output" != "$expected" ]]; then
           echo "Assertion failed: unexpected result when testing sed_expression." >&2
           echo "Expected result: ${expected}"
