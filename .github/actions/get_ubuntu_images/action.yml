@@ -138,7 +138,18 @@ runs:
         echo "amd64 image: $amd64_path"
         echo "ARM image: $arm64_path"
         
+        # Assert we have exactly one instance of the two images in our repository's GitHub Actions cache
+        
+        echo "Repository caches that currently exist:"
+        caches="$(gh cache list)"
+        echo "$caches"
+        if [[ $(wc -l <<< "$caches") != "1" ]]; then
+          echo "Assertion failed: expected 1 cache entry but we got $(wc -l <<< "$caches")" >&2
+          exit 1
+        fi
+
         # Assert we created two files and they are reasonably large
+
         echo "File sizes:"
         echo "$(du -h $amd64_path)"
         echo "$(du -h $arm64_path)"
@@ -152,6 +163,7 @@ runs:
           exit 1
         fi
       env:
+        GH_TOKEN: ${{ inputs.token }}
         # make sure these match the expressions which define the action's output.
         amd64_path: ${{ steps.make-paths.outputs.amd64_path }}
         arm64_path: ${{ steps.make-paths.outputs.arm64_path }}

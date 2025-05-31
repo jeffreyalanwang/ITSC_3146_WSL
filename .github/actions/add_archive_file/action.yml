@@ -44,11 +44,11 @@ runs:
     # archive_size: Size of original archive, divided by 1024 bytes, no K suffix.
     # additions_size: Total size of files to add, divided by 1024 bytes, no K suffix.
 
-  - name: Make a working directory available, format archive-hierarchy-location
+  - name: Make a working directory available, format input path (archive-hierarchy-location)
     id: safe-paths
     shell: bash
     run: |
-      ## Make a working directory available, format archive-hierarchy-location
+      ## Make a working directory available, format input path (archive-hierarchy-location)
 
       # $working_dir
       [[ "${working_dir}" != */ ]] && working_dir="${working_dir}/" # ensure path string ends with slash
@@ -81,10 +81,15 @@ runs:
       # Form the destination path where we unzip to (does not change filename)
       decompressed_path="${gzipped_path/$match_directory_pattern/$working_directory}"
 
-      # Debug output: location we will unzip to
+      # Debug output: location we will unzip to.
       echo "Decompressing to: $decompressed_path"
-      if [ -e "$decompressed_path" ]; then
-        echo "Note: file already exists at this path, replacing it."
+
+      # Perform some checks
+      if [[ "$gzipped_path" == "$decompressed_path" ]]; then
+        echo "Assertion failed: we are decompressing to the same path as we are reading from." >&2
+        return 1
+      elif [ -e "$decompressed_path" ]; then
+        echo "Warning: file already exists at this path, replacing it."
       fi
 
       # Unzip to the temp location
@@ -106,7 +111,6 @@ runs:
     shell: bash
     run: |
       ## Provide the unzipped archive path (did we unzip the archive to a new place?)
-
       if [[ "$new_path_was_created" == 'true' ]]; then
         echo "path=$created_path" | tee -a $GITHUB_OUTPUT
       else
@@ -124,20 +128,51 @@ runs:
     run: |
       ## Add the file to the archive
 
-      # match: from beginning to the last '/' not preceded by a '\'
+      # Form an expression telling tar to add the file at $directory_in_archive,
+      # not the directory in the GitHub Actions runner's filesystem
+
+      # match:
+      # from beginning to the last '/' not preceded by a '\'
       # match_directory_pattern='^\(.*\[^\\\]\)\?\/'  # non-extended regex version
       match_directory_pattern='^(.*[^\\])?\/'         # extended regex version
       echo "match_directory_pattern: $match_directory_pattern"
 
-      # replace with: destination directory
-      directory_in_archive="${directory_in_archive//[&\/\\]/\\&}" # escape all characters that would be special when present in the second part of a sed expression, below
-      echo "directory_in_archive: $directory_in_archive"
+      # replace with:
+      # escape all characters that would be special when present in the second part of a sed expression: &, /, \
+      # using a preceding backslash: \
+      directory_escaped_for_sed="${directory_in_archive//[&\/\\]/\\&}"
+      echo "directory_escaped_for_sed: $directory_escaped_for_sed"
 
-      # Form an expression telling tar to add the file at $directory_in_archive, not the directory in the GitHub Actions runner's filesystem
-      sed_expression="s/$match_directory_pattern/$directory_in_archive/"
+      sed_expression="s/$match_directory_pattern/$directory_escaped_for_sed/"
       echo "sed_expression: $sed_expression"
 
+      # Perform checks on our regex work
+      inputs=(
+        '/test/directory/file'
+        'test/direction/file'
+        'file'
+        '/'
+      )
+      expecteds=(
+        '${directory_in_archive}file'
+        '${directory_in_archive}file'
+        'file'
+        '${directory_in_archive}'
+      )
+      for i in {0..3}; do
+        echo "Testing input case #${i}:"
+        echo "${inputs[i]}"
+
+        output="${inputs[i]}"
+        if [[ "$output" != "${expecteds[i]}" ]]; then
+          echo "Assertion failed: unexpected result when testing sed_expression." >&2
+          echo "Expected result: ${expecteds[i]}"
+          return 1
+        fi
+      done
+
       # Add the file
+
       tar --append -vf $amd64_d_archive --transform "$sed_expression" "$source_file"
     env:
       source_file: ${{ inputs.file-path }}
