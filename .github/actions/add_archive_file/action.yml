@@ -173,6 +173,17 @@ runs:
         echo "Assertion failed: new archive is not larger than old archive" >&2
         exit 1
       fi
+
+      # Assert that we created a valid archive
+      if [[ $output_is_gzipped == 'true' ]]; then
+        echo "Checking if our output is a valid gzipped tar archive..."
+        tar -xz --to-stdout -f $archive_path >> /dev/null
+        echo "Success"
+      else
+        echo "Checking if our output is a valid tar archive..."
+        tar -x --to-stdout -f $archive_path >> /dev/null
+        echo "Success"
+      fi
     env:
       output_is_gzipped: ${{ inputs.is-gzip-compressed }}
       # make sure these were calculated with --block-size=1K.
