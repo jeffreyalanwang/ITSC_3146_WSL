@@ -85,7 +85,7 @@ jobs:
           asset_name: ITSC-3146-Windows-arm64.wsl
           asset_content_type: application/gzip
 
-      - name: "Debug output 1/2: ls ./"
+      - name: "Debug output 1/3: ls ./"
         if: always()
         run: |
           # ls -a -R ./ # find can better filter out extraneous dirs
@@ -93,7 +93,7 @@ jobs:
             -path './repo/.git' -prune -o \
             -print
 
-      - name: "Debug output 2/2: ls ~/"
+      - name: "Debug output 2/3: ls ~/"
         if: always()
         run: |
           # ls -R ~/ # find can better filter out extraneous dirs
@@ -105,3 +105,10 @@ jobs:
             -path ~/.nvm -prune -o \
             -path ~/.dotnet -prune -o \
             -print
+          
+      - name: "Debug output 3/3: ls $RUNNER_TEMP"
+        if: always()
+        run: |
+          echo '$RUNNER_TEMP location: '"$RUNNER_TEMP"
+          ls $RUNNER_TEMP
+          # no need to use find for this directory
