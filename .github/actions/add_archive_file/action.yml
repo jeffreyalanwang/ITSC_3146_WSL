@@ -115,11 +115,11 @@ runs:
     # outputs:
     # decompressed_path: Location of the unzipped archive.
 
-  - name: Provide the unzipped archive path (did we unzip the archive to a new place?)
+  - name: Determine the unzipped archive path (might be original archive, might be an unzipped location)
     id: where-archive
     shell: bash
     run: |
-      ## Provide the unzipped archive path (did we unzip the archive to a new place?)
+      ## Determine the unzipped archive path (might be original archive, might be an unzipped location)
       if [[ "$new_path_was_created" == 'true' ]]; then
         echo "path=$created_path" | tee -a $GITHUB_OUTPUT
       else
