@@ -155,10 +155,14 @@ runs:
       original_archive_path: ${{ inputs.archive-path }}
       decompressed_path: ${{ steps.unzip-archive.outputs.decompressed_path }}
 
-  - name: Assert we changed the size of our archive
+  - name: Asserts
     shell: bash
     run: |
-      ## Assert we changed the size of our archive
+      ## Asserts
+
+      echo "Checking our output file (provided at path $archive_path)"
+      
+      # Assert that we changed the size of our archive
       echo "Note: if archive is gzipped, size increase of archive may be smaller than size of added file."
       final_archive_size_1K="$(du --block-size=1K $archive_path | cut -f1)"
       echo "Size of original archive: ${original_archive_size_1K} K"
@@ -170,6 +174,7 @@ runs:
         exit 1
       fi
     env:
+      output_is_gzipped: ${{ inputs.is-gzip-compressed }}
       # make sure these were calculated with --block-size=1K.
       original_archive_size_1K: ${{ steps.pre-assert.outputs.archive_size }}
       expected_size_increase_1K: ${{ steps.pre-assert.outputs.additions_size }}

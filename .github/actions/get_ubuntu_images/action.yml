@@ -129,10 +129,16 @@ runs:
         mv ${{ steps.make-paths.outputs.amd64_cachepath }} ${{ steps.make-paths.outputs.amd64_path }}
         mv ${{ steps.make-paths.outputs.arm64_cachepath }} ${{ steps.make-paths.outputs.arm64_path }}
 
-    - name: Assert we created two files and they are large enough
+    - name: Asserts
       shell: bash
       run: |
-        ## Assert we created two files and they are reasonably large
+        ## Asserts
+
+        echo "Checking our output files, at the following paths:"
+        echo "amd64 image: $amd64_path"
+        echo "ARM image: $arm64_path"
+        
+        # Assert we created two files and they are reasonably large
         echo "File sizes:"
         echo "$(du -h $amd64_path)"
         echo "$(du -h $arm64_path)"
