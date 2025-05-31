@@ -164,6 +164,7 @@ runs:
         fi
       env:
         GH_TOKEN: ${{ inputs.token }}
+        GH_REPO: ${{ github.repository }}
         # make sure these match the expressions which define the action's output.
         amd64_path: ${{ steps.make-paths.outputs.amd64_path }}
         arm64_path: ${{ steps.make-paths.outputs.arm64_path }}
