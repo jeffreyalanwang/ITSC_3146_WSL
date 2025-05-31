@@ -88,7 +88,7 @@ runs:
       sed_expression="s/$match_directory_pattern/$directory_escaped_for_sed/"
       echo "sed_expression: $sed_expression"
 
-      decompressed_path="$("$gzipped_path" | sed -E "$sed_expression")"
+      decompressed_path="$(echo "$gzipped_path" | sed -E "$sed_expression")"
 
       # Debug output: location we will unzip to.
       echo "Decompressing to: $decompressed_path"
