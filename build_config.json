@@ -1,0 +1,10 @@
+{
+    "copy_runtime_files": {
+        "/cloud-init/99a_uncc_itsc_3146.cfg": "/etc/cloud/cloud.cfg.d/99a_uncc_itsc_3146.cfg",
+        "/cloud-init/vendor-data": "/etc/CCI/vendor-data",
+        "/wsl/wsl.conf": "/etc/wsl.conf",
+        "/wsl/wsl-distribution.conf": "/etc/wsl-distribution.conf",
+        "/wsl/wsl-oobe-itsc.sh": "/etc/CCI/oobe_itsc_3146.sh",
+        "/wsl/wsl-terminal-profile.json": "/etc/CCI/wsl-terminal-profile.json"
+    }
+}
