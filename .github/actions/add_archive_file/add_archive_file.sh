@@ -26,43 +26,6 @@ param_count() {
     fi
 }
 
-# Generate a sed expression to replace a path string's
-# directory portion with a new directory.
-#
-# $1:       New directory.
-#
-# stdout:   An extended regex pattern (i.e. an argument to `sed -E`)
-#           which replaces all text including the last path-separating '/'
-#           with `$1`.
-#
-expr_replacing_dir_in_path() {
-    param_count 1 $#
-    local new_directory; new_directory="$1"
-
-    # ensure new directory ends in a '/'
-    local last_char
-    last_char="${new_directory: -1}"
-    if [[ last_char != '/' ]]; then
-        new_directory="${new_directory}/"
-    fi
-
-    # match:
-    # from beginning to the last '/' not preceded by a '\'
-    local match_directory_pattern
-    match_directory_pattern='^(.*[^\\])?\/' # extended regex
-
-    # replace with:
-    # escape all characters that would be special when present
-    # in the second part of a sed expression ('&', '/', '\')
-    # using a preceding backslash: '\'
-    local directory_escaped_for_sed
-    directory_escaped_for_sed="${new_directory//[&\/\\]/\\&}"
-
-    local sed_expression
-    sed_expression="s/$match_directory_pattern/$directory_escaped_for_sed/"
-    echo "$sed_expression"
-}
-
 # Get a temporary directory, and unzip a gzipped file there.
 #
 # $1:       Path to a gzipped file.
@@ -74,16 +37,14 @@ unzip_to_temp() {
     param_count 1 $#
     local file_path; file_path="$1"
 
-    #TODO replace with dirname to eliminate potential issues
-    local sed_expression decompressed_path
-    sed_expression="$(expr_replacing_dir_in_path $temp_dir)"
-    decompressed_path="$(echo "$file_path" | sed -E "$sed_expression")"
+    local decompressed_path
+    decompressed_path="${temp_dir}/$(basename "$file_path")"
 
     # Perform some checks
     if [[ "$file_path" == "$decompressed_path" ]]; then
         echo "Error: we are decompressing to the same path as we are reading from." >&2
         return 1
-    elif [ -e "$decompressed_path" ]; then
+    elif [[ -e "$decompressed_path" ]]; then
         echo "Warning: file already exists at this path, replacing it."
     fi
 
