@@ -26,6 +26,11 @@ param_count() {
     fi
 }
 
+# For use with unit tests.
+echo_args() {
+    echo "$2"
+}
+
 # Get a temporary directory, and unzip a gzipped file there.
 #
 # $1:       Path to a gzipped file.

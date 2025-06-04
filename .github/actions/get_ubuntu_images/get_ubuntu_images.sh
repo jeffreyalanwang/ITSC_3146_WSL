@@ -26,6 +26,11 @@ param_count() {
     fi
 }
 
+# For use with unit tests.
+echo_args() {
+    echo "$2"
+}
+
 # Get the most up-to-date Ubuntu WSL image file links + checksums.
 #
 # Output stored in shell variables:

@@ -72,22 +72,27 @@ test_main() {
 
 test_cmdline() {
     
+    local output
+
     # Test that we can call main by calling script with no arguments.
-    
     # setup: ensure files we use do not exist yet
     rm -f -r "/tmp/get_ubuntu_images/"
     rm -f -r "/tmp/add_archive_file/"
     rm -f -r "$BUILD_OUTPUT_DIR"
-
-    # Execute
-    local output
-
-    # Attempt 1
-    # setup: none
     # execute
     $SCRIPT
     # assert we now have 2 images
     assertEquals 2 "$(ls "$BUILD_OUTPUT_DIR" | wc -l)"
+
+    # Test that we can quote files with spaces in them.
+    # setup
+    local arg1 arg2
+    arg1="/tmp/directory with space/archive without extension"
+    arg2="/tmp/directory with space/new archive"
+    # execute
+    output="$($SCRIPT echo_args "$arg1" "$arg2")"
+    # assert
+    assertSame "$arg2" "$output"
 }
 
 # Load shUnit2.

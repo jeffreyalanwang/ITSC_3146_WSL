@@ -1,7 +1,7 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(dirname "$0")"
-SCRIPT="${SCRIPT_DIR}/add_archive_file.sh"
+export SCRIPT="${SCRIPT_DIR}/add_archive_file.sh"
 
 test_param_count() {
 	bash -s -e -o pipefail <<- EOF
@@ -285,19 +285,45 @@ test_main() {
     assertSame "failed" "$unzipped_path"
 }
 
-# #TODO once you get here, change everything above to use source,
-# #TODO and what's below should test by calling the script at cmdline
-# test_cmdline() {
-#     # test piping
-#      | $SCRIPT main "$archive_path" "$modified_archive_path"
-#     # check dest checksum
+test_cmdline() {
 
-#     # test that we can quote files with spaces in them
-#     archive_path="/tmp/directory with space/archive without extension"
-#     modified_archive_path="/tmp/directory with space/new archive"
-#      | $SCRIPT main "$archive_path" "$modified_archive_path"
-#     # check dest checksum
-# }
+    local output input
+
+    # test piping
+    # setup
+    input="stdin contents"
+    # execute
+    output="$(
+                echo "$input" |
+                bash -c -e -o pipefail 'source $SCRIPT; echo "$cmdline_stdin"' \
+            )"
+    # assert
+    assertSame "$input" "$output"
+
+    # test multi-line piping
+    # setup
+    input="multi-
+            line
+            string
+            "
+    # execute
+    output="$(
+                echo "$input" |
+                bash -c -e -o pipefail 'source $SCRIPT; echo "$cmdline_stdin"' \
+            )"
+    # assert
+    assertSame "$input" "$output"
+
+    # test that we can quote files with spaces in them
+    # setup
+    local arg1 arg2
+    arg1="/tmp/directory with space/archive without extension"
+    arg2="/tmp/directory with space/new archive"
+    # execute
+    output="$($SCRIPT echo_args "$arg1" "$arg2")"
+    # assert
+    assertSame "$arg2" "$output"
+}
 
 # Load shUnit2.
 . shunit2

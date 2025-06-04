@@ -16,7 +16,29 @@ test_param_count() {
 }
 
 test_get_wsl_image_links() {
-    #TODO this requires source
+    bash -s -e -o pipefail <<- 'EOF'
+		source $SCRIPT
+        
+        # Setup
+
+        assertNull "$populated_links"
+        assertNull "$amd64url"
+        assertNull "$amd64sha256"
+        assertNull "$arm64url"
+        assertNull "$arm64sha256"
+
+        # Execute
+
+        get_wsl_image_links
+
+        # Assert outputs
+
+        assertTrue "[[ $populated_links == 'true' ]]"
+        assertContains "$amd64url" 'https://'
+        assertContains "$arm64url" 'https://'
+        assertEquals 64 "$(wc -m "$amd64sha256")"
+        assertEquals 64 "$(wc -m "$arm64sha256")"
+	EOF
 }
 
 test_check_file_sum() {
@@ -135,7 +157,68 @@ test_download_wsl_images() {
 }
 
 test_check_images() {
-    #TODO this requires source
+    bash -s -e -o pipefail <<- 'EOF'
+		source $SCRIPT
+		
+        # Setup
+        amd64img="/bin/dash"
+        arm64img="/bin/bash"
+
+        # Execute
+        local output # not necessary in a subshell, but for consistency
+
+        # Attempt 1: populated_links == ''
+        # setup
+        populated_links=''
+        populated_files='true'
+        amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
+        arm64sha256="$(sha256sum "$arm64img" | awk '{print $1}')"
+        # execute
+        output=$(check_images || echo "failed")
+        # assert error
+        assertNotNull "$output"
+
+        # Attempt 2: populated_links == 'false'
+        populated_links='false'
+        populated_files='true'
+        amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
+        arm64sha256="$(sha256sum "$arm64img" | awk '{print $1}')"
+        # execute
+        output=$(check_images || echo "failed")
+        # assert error
+        assertNotNull "$output"
+
+        # Attempt 3: wrong hash for amd64img
+        populated_links='true'
+        populated_files='true'
+        amd64sha256="some extra text, plus $(sha256sum "$amd64img" | awk '{print $1}')"
+        arm64sha256="$(sha256sum "$arm64img" | awk '{print $1}')"
+        # execute
+        output=$(check_images || echo "failed")
+        # assert error
+        assertNotNull "$output"
+
+        # Attempt 4: wrong hash for arm64img
+        populated_links='true'
+        populated_files='true'
+        amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
+        arm64sha256="$(sha256sum "$arm64img" | awk '{print $1}') plus some extra text"
+        # execute
+        output=$(check_images || echo "failed")
+        # assert error
+        assertNotNull "$output"
+
+        # Attempt 5: Success state
+        populated_links='true'
+        populated_files='true'
+        amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
+        arm64sha256="$(sha256sum "$arm64img" | awk '{print $1}')"
+        # execute
+        output=$(check_images || echo "failed")
+        # assert no error
+        assertNull "$output"
+	EOF
+
 }
 
 test_main() {
@@ -165,15 +248,17 @@ test_main() {
 
 }
 
-# #TODO once you get here, change everything above to use source,
-# #TODO and what's below should test by calling the script at cmdline
-# test_cmdline() {
-#     # test that we can quote files with spaces in them
-#     archive_path="/tmp/directory with space/archive without extension"
-#     modified_archive_path="/tmp/directory with space/new archive"
-#      | $SCRIPT main "$archive_path" "$modified_archive_path"
-#     # check dest checksum
-# }
+test_cmdline() {
+    # test that we can quote files with spaces in them
+    # setup
+    local arg1 arg2
+    arg1="/tmp/directory with space/archive without extension"
+    arg2="/tmp/directory with space/new archive"
+    # execute
+    output="$($SCRIPT echo_args "$arg1" "$arg2")"
+    # assert
+    assertSame "$arg2" "$output"
+}
 
 # Load shUnit2.
 . shunit2

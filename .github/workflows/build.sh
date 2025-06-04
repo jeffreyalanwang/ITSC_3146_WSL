@@ -41,6 +41,11 @@ param_count() {
     fi
 }
 
+# For use with unit tests.
+echo_args() {
+    echo "$2"
+}
+
 # Get the files to copy into each image.
 #
 # stdout:   A JSON object.
