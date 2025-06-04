@@ -129,16 +129,16 @@ rezip_to_path() {
 
 # Add files to a gzipped tar archive.
 # 
-# stdin:                    JSON object.
-#                           Keys are filepaths on the current machine.
-#                           Values are filepaths when inside the archive.
+# stdin:    JSON object.
+#           Keys are filepaths on the current machine.
+#           Values are filepaths when inside the archive.
 #
-# archive_path:             Path to the archive to add files to.
-# modified_archive_path:    Where to create the new archive, including filename.
-#                           Must be different from `archive_path`.
-#                           The file created here will be gzipped.
+# $1:       Path to the archive to add files to.
+# $2:       Where to create the new archive, including filename.
+#           Must be different from `archive_path`.
+#           The file created here will be gzipped.
 #
-# stdout:                   Debug logs.
+# stdout:   Debug logs.
 #
 main() {
     param_count 2
