@@ -171,4 +171,4 @@ main() {
 # > [...]
 #
 cmdline_stdin="$(cat -)"
-$1 "${@:2@Q}" #TODO test that we can quote files with spaces in them
+$1 "${@:2@Q}"

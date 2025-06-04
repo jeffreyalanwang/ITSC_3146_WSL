@@ -160,6 +160,10 @@ download_or_keep() {
     fi
 
     if [[ "$needs_download" == 'true' ]]; then
+        if [[ -f "$path" ]]; then
+        echo "Error: unreachable situation occurred." >&2
+            exit 1
+        fi
         wget "$url" -O- > "$path"
     fi
 }
@@ -242,7 +246,7 @@ main() {
 
     get_wsl_image_links
     download_wsl_images
-    check_images    
+    check_images
 
     echo -n '[amd64]="'
     echo -n "$amd64path"
