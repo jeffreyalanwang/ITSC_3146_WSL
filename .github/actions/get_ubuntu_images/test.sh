@@ -88,7 +88,7 @@ test_download_or_keep() {
     local requested_path actual_path
     requested_path="/tmp/myfile"
 
-    # Attempt 1: Download a file to a test dir
+    echo "- Case 1: Download a file to a test dir"
     # setup: none
     # execute
     actual_path="$($SCRIPT download_or_keep "$url" "$requested_path" "$expected_sha256sum")"
@@ -98,7 +98,7 @@ test_download_or_keep() {
     actual_sha256sum="$(sha256sum "$actual_path")"
     assertEquals "$expected_sha256sum" "$actual_sha256sum"
 
-    # Attempt 2: Download the file again (same file contents)
+    echo "- Case 2: Download the file again (same file contents)"
     # setup: none
     # execute
     actual_path="$($SCRIPT download_or_keep "$url" "$requested_path" "$expected_sha256sum")"
@@ -108,7 +108,7 @@ test_download_or_keep() {
     actual_sha256sum="$(sha256sum "$actual_path")"
     assertEquals "$expected_sha256sum" "$actual_sha256sum"
 
-    # Attempt 3: Download the file to a destination which has a different file value
+    echo "- Case 3: Download the file to a destination which has a different file value"
     # setup
     rm -r "${requested_path}"
     touch "${requested_path}"
@@ -133,7 +133,7 @@ test_download_wsl_images() {
     # Execute
     local output
 
-    # Attempt 1: make sure GitHub Actions temp variable not set
+    echo "- Case 1: make sure GitHub Actions temp variable not set"
     # setup
     RUNNER_TEMP=""
     # execute
@@ -144,7 +144,7 @@ test_download_wsl_images() {
     assertTrue "[[ -d /tmp/get_ubuntu_images ]]"
     assertEquals 2 "$(ls /tmp/get_ubuntu_images | wc -l)"
 
-    # Attempt 2: set GitHub Actions temp variable
+    echo "- Case 2: set GitHub Actions temp variable"
     # setup
     RUNNER_TEMP="/var/run"
     # execute
@@ -167,7 +167,7 @@ test_check_images() {
         # Execute
         local output # not necessary in a subshell, but for consistency
 
-        # Attempt 1: populated_links == ''
+        echo "- Case 1: populated_links == ''"
         # setup
         populated_links=''
         populated_files='true'
@@ -178,7 +178,7 @@ test_check_images() {
         # assert error
         assertNotNull "$output"
 
-        # Attempt 2: populated_links == 'false'
+        echo "- Case 2: populated_links == 'false'"
         populated_links='false'
         populated_files='true'
         amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
@@ -188,7 +188,7 @@ test_check_images() {
         # assert error
         assertNotNull "$output"
 
-        # Attempt 3: wrong hash for amd64img
+        echo "- Case 3: wrong hash for amd64img"
         populated_links='true'
         populated_files='true'
         amd64sha256="some extra text, plus $(sha256sum "$amd64img" | awk '{print $1}')"
@@ -198,7 +198,7 @@ test_check_images() {
         # assert error
         assertNotNull "$output"
 
-        # Attempt 4: wrong hash for arm64img
+        echo "- Case 4: wrong hash for arm64img"
         populated_links='true'
         populated_files='true'
         amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
@@ -208,7 +208,7 @@ test_check_images() {
         # assert error
         assertNotNull "$output"
 
-        # Attempt 5: Success state
+        echo "- Case 5: Success state"
         populated_links='true'
         populated_files='true'
         amd64sha256="$(sha256sum "$amd64img" | awk '{print $1}')"
@@ -230,7 +230,7 @@ test_main() {
 
     # Execute
 
-    # Attempt 1
+    echo "- Case 1"
     # setup: none
     # execute
     declare -A paths="( $($SCRIPT main) )"

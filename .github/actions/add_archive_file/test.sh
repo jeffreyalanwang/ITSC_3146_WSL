@@ -42,7 +42,7 @@ test_unzip_to_temp() {
     # Execute
     local unzipped_path actual_md5 output warning_str
 
-    # Attempt 1: make sure GitHub Actions temp variable not set
+    echo "- Case 1: make sure GitHub Actions temp variable not set"
     # setup
     RUNNER_TEMP=""
     # execute
@@ -53,7 +53,7 @@ test_unzip_to_temp() {
     actual_md5="$(cat "$unzipped_path" | md5sum - | awk '{print $1}')"
     assertSame "$expected_md5" "$actual_md5"
 
-    # Attempt 2: try a path with spaces #TODO do this with a direct call (source the script)
+    echo "- Case 2: try a path with spaces #TODO do this with a direct call (source the script)"
     # setup
     RUNNER_TEMP=""
     mkdir -p "/tmp/directory 01927834"
@@ -66,7 +66,7 @@ test_unzip_to_temp() {
     actual_md5="$(cat "$unzipped_path" | md5sum - | awk '{print $1}')"
     assertSame "$expected_md5" "$actual_md5"
 
-    # Attempt 3: set GitHub Actions temp variable
+    echo "- Case 3: set GitHub Actions temp variable"
     # setup
     RUNNER_TEMP="/var/run"
     # execute
@@ -77,7 +77,7 @@ test_unzip_to_temp() {
     actual_md5="$(cat "$unzipped_path" | md5sum - | awk '{print $1}')"
     assertSame "$expected_md5" "$actual_md5"  
 
-    # Attempt 4: ensure errors when origin file is in the destination temp dir
+    echo "- Case 4: ensure errors when origin file is in the destination temp dir"
     # setup
     RUNNER_TEMP=""
     cp -f "/tmp/hello.txt" "/tmp/add_archive_file/hello.txt"
@@ -86,7 +86,7 @@ test_unzip_to_temp() {
     # assert that we failed
     assertSame "failed" "$output"
 
-    # Attempt 5: ensure warning when some other file in the destination temp location
+    echo "- Case 5: ensure warning when some other file in the destination temp location"
     # setup
     RUNNER_TEMP=""
     cp -f "/tmp/hello.txt" "/tmp/hi.txt"
@@ -124,7 +124,7 @@ test_add_file_to_archive() {
     # Execute
     local output warning_str
 
-    # Attempt 1: add file
+    echo "- Case 1: add file"
     # setup
     mkdir -p "/tmp/extracted"
     # execute
@@ -138,14 +138,14 @@ test_add_file_to_archive() {
     actual_md5="$(cat "/tmp/extracted/my/path/in/archive" | md5sum - | awk '{print $1}')"
     assertSame "$expected_file_md5" "$actual_md5"
 
-    # Attempt 2: ensure error when pipe in file dest path
+    echo "- Case 2: ensure error when pipe in file dest path"
     # setup: none
     # execute
     output="$($SCRIPT add_file_to_archive "$tarpath" "$filepath" "my/path/in/archive|" || echo "failed")"
     # assert that we failed
     assertSame "failed" "$output"
 
-    # Attempt 3: ensure error when archive is gzipped
+    echo "- Case 3: ensure error when archive is gzipped"
     # setup
     cat "$tarpath" | gzip > "/tmp/hello.tarbutgzipped"
     # execute
@@ -153,7 +153,7 @@ test_add_file_to_archive() {
     # assert that we failed
     assertSame "failed" "$output"
 
-    # Attempt 4: ensure warning when / starts file dest path
+    echo "- Case 4: ensure warning when / starts file dest path"
     # setup: none
     # execute
     warning_str="$($SCRIPT add_file_to_archive "$tarpath" "$filepath" "/my/path/in/archive" | grep "Warning")"
@@ -181,7 +181,7 @@ test_rezip_to_path() {
     # Execute
     local dest_path output actual_md5
 
-    # Attempt 1: unzip to an arbitrary directory
+    echo "- Case 1: unzip to an arbitrary directory"
     # setup
     dest_path="/tmp/rezipped_file"
     # execute
@@ -190,14 +190,14 @@ test_rezip_to_path() {
     actual_md5="$(cat "$dest_path" | md5sum - | awk '{print $1}')"
     assertSame "$zipped_md5" "$actual_md5"
 
-    # Attempt 2: ensure error when filepath and dest_path are the same
+    echo "- Case 2: ensure error when filepath and dest_path are the same"
     # setup: none
     # execute
     output="$($SCRIPT rezip_to_path "$filepath" "$filepath" || echo "failed")"
     # assert that we failed
     assertSame "failed" "$unzipped_path"
 
-    # Attempt 3: ensure error when some other file at dest_path
+    echo "- Case 3: ensure error when some other file at dest_path"
     # setup
     rm -f "$dest_path"
     touch "$dest_path"
@@ -245,7 +245,7 @@ test_main() {
     # Execute
     local dest_path unzip_dir files_count actual_file_1_md5 actual_file_2_md5 output
 
-    # Attempt 1: unzip to an arbitrary directory
+    echo "- Case 1: unzip to an arbitrary directory"
     # setup
     dest_path="/tmp/new_test_archive"
     unzip_dir="/tmp/unzip_to_dir"
@@ -261,14 +261,14 @@ test_main() {
     assertSame "$expected_file_1_md5" "$actual_file_1_md5"
     assertSame "$expected_file_2_md5" "$actual_file_2_md5"
 
-    # Attempt 2: ensure error when filepath and dest_path are the same
+    echo "- Case 2: ensure error when filepath and dest_path are the same"
     # setup: none
     # execute
     output="$( { echo "$files_json_value" | $SCRIPT main "$tarpath" "$tarpath" ; } || echo "failed")"
     # assert that we failed
     assertSame "failed" "$unzipped_path"
 
-    # Attempt 3: ensure error when some other file at dest_path
+    echo "- Case 3: ensure error when some other file at dest_path"
     # setup
     rm -f "$dest_path"
     touch "$dest_path"
@@ -277,7 +277,7 @@ test_main() {
     # assert that we failed
     assertSame "failed" "$unzipped_path"
 
-    # Attempt 4: ensure error when no stdin
+    echo "- Case 4: ensure error when no stdin"
     # setup: none
     # execute
     output="$($SCRIPT main "$tarpath" "$dest_path" || echo "failed")"
