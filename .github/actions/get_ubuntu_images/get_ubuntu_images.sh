@@ -1,4 +1,5 @@
-#!/bin/bash -e -o pipefail
+#!/bin/bash
+set -e -o pipefail
 
 temp_dir="/tmp"
 if [[ -n "$RUNNER_TEMP" ]]; then
@@ -13,17 +14,20 @@ mkdir -p "$temp_dir"
 # $2:       Actual number of arguments.
 #
 param_count() {
-    local expected; expected = $1;
-    local actual; actual = $2;
+    local expected; expected=$1;
+    local actual; actual=$2;
 
-    if [[ -z $1 ]] || [[ -z $1 ]] || [[ -n $3 ]]; then
+    if [[ -z $1 ]] || [[ -z $2 ]] || [[ -n $3 ]]; then
         echo "Error: param_count requires exactly 2 arguments." >&2
+        exit 1
     fi
 
     if [[ $expected -ne $actual ]]; then
         echo "Error: This function requires exactly $expected arguments, got $actual." >&2
-        return 1
+        exit 1
     fi
+
+    return 0
 }
 
 # For use with unit tests.
@@ -41,6 +45,7 @@ echo_args() {
 # arm64sha256:      str
 #
 populated_links=false
+# shellcheck disable=SC2120 # param_count is 0
 get_wsl_image_links() { #TODO test using expected string lengths or URL format and expected substring presence (arm/amd)
     param_count 0 $#
     # Latest Ubuntu WSL image available at:
@@ -97,10 +102,10 @@ get_wsl_image_links() { #TODO test using expected string lengths or URL format a
     #   }
     # }
 
-    amd64url="$(echo $ubuntu_json_obj | jq '.Amd64Url.Url')"
-    amd64sha256="$(echo $ubuntu_json_obj | jq '.Amd64Url.Sha256')"
-    arm64url="$(echo $ubuntu_json_obj | jq '.Arm64Url.Url')"
-    arm64sha256="$(echo $ubuntu_json_obj | jq '.Arm64Url.Sha256')"
+    amd64url="$(echo "$ubuntu_json_obj" | jq --raw-output '.Amd64Url.Url')"
+    amd64sha256="$(echo "$ubuntu_json_obj" | jq --raw-output '.Amd64Url.Sha256')"
+    arm64url="$(echo "$ubuntu_json_obj" | jq --raw-output '.Arm64Url.Url')"
+    arm64sha256="$(echo "$ubuntu_json_obj" | jq --raw-output '.Arm64Url.Sha256')"
 
     populated_links=true
 }
@@ -121,7 +126,7 @@ check_file_sum() {
     local img_sum
     img_sum="$(sha256sum "$img" | awk '{print $1}')"
 
-    if [["$img_sum" == "$expected_sum"]]; then
+    if [[ "$img_sum" == "$expected_sum" ]]; then
         return 0
     else
         return 1
@@ -146,16 +151,16 @@ download_or_keep() {
 
     local needs_download
     needs_download=false
-    if [[ -f "$path" ]]; then # file already exists at the expected destination
+    if [[ -e "$path" ]]; then # file already exists at the expected destination
         
-        if [[ check_file_sum "$path" "$sha256sum" ]]; then # file has the desired hash
+        if { check_file_sum "$path" "$sha256sum"; }; then # file has the desired hash
             needs_download=false
 
         else # file hash does not match
             needs_download=true
 
             # we will need to save with a new filename
-            while [[ -f "$path" ]]; do
+            while [[ -e "$path" ]]; do
                 path="${path}.1"
             done
         fi
@@ -165,12 +170,15 @@ download_or_keep() {
     fi
 
     if [[ "$needs_download" == 'true' ]]; then
-        if [[ -f "$path" ]]; then
+        if [[ -e "$path" ]]; then
         echo "Error: unreachable situation occurred." >&2
             exit 1
         fi
         wget "$url" -O- > "$path"
     fi
+
+    # output
+    echo "$path"
 }
 
 # Download the Ubuntu WSL images to a temporary directory.
@@ -181,6 +189,7 @@ download_or_keep() {
 # amd64img:         Path to the amd64 WSL image.
 # arm64img:         Path to the arm64 WSL image.
 #
+# shellcheck disable=SC2120 # param_count is 0
 download_wsl_images() {
     param_count 0 $#
     if [[ "$populated_links" != 'true' ]]; then
@@ -188,7 +197,7 @@ download_wsl_images() {
     fi
 
     # These may not end up being the ultimate paths we use.
-    local amd64img_path, arm64img_path
+    local amd64img_path arm64img_path
     amd64img_path="${temp_dir}/amd64_base_img_${amd64sha256:0:5}.wsl"
     arm64img_path="${temp_dir}/arm64_base_img_${arm64sha256:0:5}.wsl"
 
@@ -210,6 +219,7 @@ download_wsl_images() {
 #
 # No output, but exits script with failure code (`exit 1`) on failure.
 #
+# shellcheck disable=SC2120 # param_count is 0
 check_images() {
     param_count 0 $#
     
@@ -221,7 +231,7 @@ check_images() {
     fi
 
     # Check amd64 image
-    if [[ ! check_file_sum "$amd64img" "$amd64sha256" ]]; then
+    if ! { check_file_sum "$amd64img" "$amd64sha256"; }; then
         echo "amd64 image did not match expected checksum." >&2
         echo "File: $amd64img" >&2
         echo "Expected: $amd64sha256" >&2
@@ -229,7 +239,7 @@ check_images() {
     fi
 
     # Check arm64 image
-    if [[ ! check_file_sum "$arm64img" "$arm64sha256" ]]; then
+    if ! { check_file_sum "$arm64img" "$arm64sha256"; }; then
         echo "amd64 image did not match expected checksum." >&2
         echo "File: $arm64img" >&2
         echo "Expected: $arm64sha256" >&2
@@ -246,6 +256,7 @@ check_images() {
 #                   [amd64]="/path/to/file"
 #                   [arm64]="/path/to/file"
 #
+# shellcheck disable=SC2120 # param_count is 0
 main() {
     param_count 0 $#
 
@@ -253,12 +264,14 @@ main() {
     download_wsl_images
     check_images
 
-    echo -n '[amd64]="'
-    echo -n "$amd64path"
+    echo -n '[amd64]='
+    echo -n '"'
+    echo -n "$amd64img"
     echo '"'
 
-    echo -n '[arm64]="'
-    echo -n "$arm64path"
+    echo -n '[arm64]='
+    echo -n '"'
+    echo -n "$arm64img"
     echo '"'
 }
 
@@ -267,4 +280,5 @@ main() {
 # $ ./add_archive_file.sh function_name arg_1 arg_2 ...
 # > [...]
 #
-$1 "${@:2@Q}" #TODO test that we can quote files with spaces in them
+fn_args=( "${@:2}" )
+$1 "${fn_args[@]}"

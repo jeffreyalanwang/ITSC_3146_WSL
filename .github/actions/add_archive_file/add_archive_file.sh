@@ -1,4 +1,5 @@
-#!/bin/bash -e -o pipefail
+#!/bin/bash
+set -e -o pipefail
 
 temp_dir="/tmp"
 if [[ -n "$RUNNER_TEMP" ]]; then
@@ -13,17 +14,20 @@ mkdir -p "$temp_dir"
 # $2:       Actual number of arguments.
 #
 param_count() {
-    local expected; expected = $1;
-    local actual; actual = $2;
+    local expected; expected=$1;
+    local actual; actual=$2;
 
-    if [[ -z $1 ]] || [[ -z $1 ]] || [[ -n $3 ]]; then
+    if [[ -z $1 ]] || [[ -z $2 ]] || [[ -n $3 ]]; then
         echo "Error: param_count requires exactly 2 arguments." >&2
+        exit 1
     fi
 
-    if [[ $expected -ne $actual ]]; then
+    if [[ "$expected" != "$actual" ]]; then
         echo "Error: This function requires exactly $expected arguments, got $actual." >&2
-        return 1
+        exit 1
     fi
+
+    return 0
 }
 
 # For use with unit tests.
@@ -48,16 +52,16 @@ unzip_to_temp() {
     # Perform some checks
     if [[ "$file_path" == "$decompressed_path" ]]; then
         echo "Error: we are decompressing to the same path as we are reading from." >&2
-        return 1
+        exit 1
     elif [[ -e "$decompressed_path" ]]; then
         echo "Warning: file already exists at this path, replacing it."
     fi
 
     # Unzip to the temp location
-    cat $file_path | gzip -d > $decompressed_path
+    cat "$file_path" | gzip -d > "$decompressed_path"
     
     # Debug output: show size and location
-    echo $decompressed_path
+    echo "$decompressed_path"
 }
 
 # Add a file to a tar archive.
@@ -79,11 +83,8 @@ add_file_to_archive() {
     local file_path; file_path="$2"
     local file_dest_path; file_dest_path="$3"
 
-    echo "Adding to tar archive ${archive_path}"
-    echo "File source: ${file_path}"
-    echo -n "File destination: " # printed by tar --append -v
-
     # Checks
+    # shellcheck disable=SC2076 # We are actually trying to match literal pipe char
     if [[ "$file_dest_path" =~ '|' ]]; then
         echo "Error: destination file path cannot contain special character '|'." >&2
         exit 1
@@ -99,11 +100,15 @@ add_file_to_archive() {
                                         # x flag indicates we are using
                                         # extended regex (sed -E)
 
+    echo "Adding to tar archive ${archive_path}"
+    echo "File source: ${file_path}"
+    echo "File destination: $(echo "$file_path" | sed -E "${sed_expression%x}")"
+
     # Note: tar --append does not remove an existing file with the same name.
     # However, in a tar archive where multiple file records share one path,
     # the file closest to the end of the tar archive stream (i.e. the one we append)
     # takes precedent over the earlier ones.
-    tar --append -vf $tar_archive --transform "${sed_expression}" "$source_file" --show-transformed-names
+    tar --append -vf "$archive_path" --transform="$sed_expression" "$file_path" --show-transformed-names
     echo "Done"
 }
 
@@ -123,8 +128,8 @@ rezip_to_path() {
     # Perform some checks
     if [[ "$from_path" == "$dest_path" ]]; then
         echo "Error: we are compressing to the same path as we are reading from." >&2
-        return 1
-    elif [ -e "$dest_path" ]; then
+        exit 1
+    elif [[ -e "$dest_path" ]]; then
         echo "Warning: file already exists at this path, replacing it."
     fi
 
@@ -146,23 +151,23 @@ rezip_to_path() {
 # stdout:   Debug logs.
 #
 main() {
-    param_count 2
+    param_count 2 $#
     local files_json; files_json="$cmdline_stdin"
     local archive_path; archive_path="$1"
     local modified_archive_path; modified_archive_path="$2"
 
     # Unzip archive
     local unzipped_path
-    unzipped_path="$( unzip_to_temp "$image_path" )"
+    unzipped_path="$( unzip_to_temp "$archive_path" )"
 
     # Add the files
     local -a keys vals; local count
-    readarray -t keys < <(echo "$files_json" | jq 'keys[]')
-    readarray -t vals < <(echo "$files_json" | jq '.[]')
+    readarray -t keys < <(echo "$files_json" | jq --raw-output 'keys[]')
+    readarray -t vals < <(echo "$files_json" | jq --raw-output '.[]')
     count="${#keys[@]}"
-    for i in {1..$count}; do
-        local file; file="${keys[i]}"
-        local path_in_archive; path_in_archive="${vals[i]}"
+    for (( i=0 ; i < count ; i++ )); do
+        local file; file="${keys[$i]}"
+        local path_in_archive; path_in_archive="${vals[$i]}"
         add_file_to_archive "$unzipped_path" "$file" "$path_in_archive"
     done
 
@@ -175,5 +180,8 @@ main() {
 # $ ./add_archive_file.sh function_name arg_1 arg_2 ...
 # > [...]
 #
-cmdline_stdin="$(cat -)"
-$1 "${@:2@Q}"
+if [[ ! -t 0 ]]; then
+    cmdline_stdin="$(cat -)"
+fi
+fn_args=( "${@:2}" )
+echo  | $1 "${fn_args[@]}"
