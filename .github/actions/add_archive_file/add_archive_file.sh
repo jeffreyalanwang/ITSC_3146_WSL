@@ -103,11 +103,15 @@ add_file_to_archive() {
     echo "Adding to tar archive ${archive_path}"
     echo "File source: ${file_path}"
     echo "File destination: $(echo "$file_path" | sed -E "${sed_expression%x}")"
+    echo "File contents (5 lines): "
+    head -n 5 "${file_path}" | sed -e 's/^/| /'
+
+    if ( tar -tf "${archive_path}" | grep "$file_dest_path" > /dev/null ); then # grep -q would break pipe & then tar would fail
+        echo "Removing preexisting file at this path"
+        tar --delete -vf "$archive_path" "$file_dest_path"
+    fi
 
     # Note: tar --append does not remove an existing file with the same name.
-    # However, in a tar archive where multiple file records share one path,
-    # the file closest to the end of the tar archive stream (i.e. the one we append)
-    # takes precedent over the earlier ones.
     tar --append -vf "$archive_path" --transform="$sed_expression" "$file_path" --show-transformed-names
     echo "Done"
 }
