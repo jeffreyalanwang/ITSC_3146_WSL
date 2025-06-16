@@ -171,7 +171,7 @@ download_or_keep() {
 
     if [[ "$needs_download" == 'true' ]]; then
         if [[ -e "$path" ]]; then
-        echo "Error: unreachable situation occurred." >&2
+            echo "Error: unreachable situation occurred." >&2
             exit 1
         fi
         wget "$url" -O- > "$path"

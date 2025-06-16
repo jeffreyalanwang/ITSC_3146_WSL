@@ -94,7 +94,7 @@ test_unzip_to_temp() {
     cp -f "/tmp/hello.txt" "/tmp/hi.txt"
     cp -f "/tmp/hello.txt" "/tmp/add_archive_file/hi.txt"
     # execute
-    warning_str="$("$SCRIPT" unzip_to_temp "/tmp/hi.txt" | grep "Warning")"
+    warning_str="$("$SCRIPT" unzip_to_temp "/tmp/hi.txt" 2>&1 | grep "Warning")"
     # assert that we got a warning
     assertNotNull "$warning_str"
 
@@ -163,7 +163,7 @@ test_add_file_to_archive() {
     echo "= Case 4: ensure warning when / starts file dest path"
     # setup: none
     # execute
-    warning_str="$("$SCRIPT" add_file_to_archive "$tarpath" "$filepath" "/my/path/in/archive" | grep "Warning")"
+    warning_str="$("$SCRIPT" add_file_to_archive "$tarpath" "$filepath" "/my/path/in/archive" 2>&1 | grep "Warning")"
     # assert that we got a warning
     assertNotNull "$warning_str"
 

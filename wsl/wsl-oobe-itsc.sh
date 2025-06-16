@@ -112,7 +112,7 @@ if status=$(LANG=C systemctl is-system-running 2>/dev/null) || [ "${status}" != 
 then
   cloud-init status --wait > /dev/null 2>&1 || true
 else
-  exit false
+  exit 1
 fi
 
 # Check if there is a pre-provisioned users (pre-baked on the rootfs or created by cloud-init).
@@ -126,7 +126,7 @@ if [ -z "${user_id}" ] ; then
   user_id=$(get_first_interactive_uid)
   if [ -z "${user_id}" ] ; then
     echo 'Failed to create a regular user account.'
-    exit false
+    exit 1
   fi
 else
   # We are using a pre-existing user.

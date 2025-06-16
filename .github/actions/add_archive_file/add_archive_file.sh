@@ -54,7 +54,7 @@ unzip_to_temp() {
         echo "Error: we are decompressing to the same path as we are reading from." >&2
         exit 1
     elif [[ -e "$decompressed_path" ]]; then
-        echo "Warning: file already exists at this path, replacing it."
+        echo "Warning: file already exists at this path, replacing it." >&2
     fi
 
     # Unzip to the temp location
@@ -91,7 +91,7 @@ add_file_to_archive() {
     fi
     if [[ ${file_dest_path:0:1} == '/' ]]; then
         echo "Warning: destination file path begins in '/'. " \
-             "Files in tar archives are generally not absolute paths."
+             "Files in tar archives are generally not absolute paths." >&2
     fi
 
     local sed_expression
@@ -112,7 +112,10 @@ add_file_to_archive() {
     fi
 
     # Note: tar --append does not remove an existing file with the same name.
-    tar --append -vf "$archive_path" --transform="$sed_expression" "$file_path" --show-transformed-names
+    tar --owner=root --group=root --mode=0755 \
+        -vf "$archive_path" \
+        --append "$file_path" \
+        --transform="$sed_expression" --show-transformed-names
     echo "Done"
 }
 
@@ -134,7 +137,7 @@ rezip_to_path() {
         echo "Error: we are compressing to the same path as we are reading from." >&2
         exit 1
     elif [[ -e "$dest_path" ]]; then
-        echo "Warning: file already exists at this path, replacing it."
+        echo "Warning: file already exists at rezipped archive's path, replacing it." >&2
     fi
 
     # Rezip
@@ -162,11 +165,12 @@ main() {
 
     # Unzip archive
     local unzipped_path
+    echo "Unzipping default Ubuntu image..."
     unzipped_path="$( unzip_to_temp "$archive_path" )"
 
     # Add the files
     local -a keys vals; local count
-    readarray -t keys < <(echo "$files_json" | jq --raw-output 'keys[]')
+    readarray -t keys < <(echo "$files_json" | jq --raw-output 'keys_unsorted[]')
     readarray -t vals < <(echo "$files_json" | jq --raw-output '.[]')
     count="${#keys[@]}"
     for (( i=0 ; i < count ; i++ )); do
@@ -176,6 +180,7 @@ main() {
     done
 
     # Rezip archive
+    echo "Rezipping image..."
     rezip_to_path "$unzipped_path" "$modified_archive_path"
 }
 
@@ -188,4 +193,4 @@ if [[ ! -t 0 ]]; then
     cmdline_stdin="$(cat -)"
 fi
 fn_args=( "${@:2}" )
-echo  | $1 "${fn_args[@]}"
+$1 "${fn_args[@]}"

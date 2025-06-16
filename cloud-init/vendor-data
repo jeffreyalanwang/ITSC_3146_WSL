@@ -1,6 +1,9 @@
+#cloud-config
+
 # Sets default user
 user:
   name: itsc
+  shell: /bin/bash
   lock_passwd: false
   groups: [adm, dialout, cdrom, floppy, sudo, audio, dip, video, plugdev, users, netdev, docker]
   plain_text_passwd: changeme
@@ -9,7 +12,10 @@ user:
 # Package installation
 apt:
   # configure Docker daemon to restart on any installation/upgrade
-- debconf_selections: docker.io docker.io/restart boolean true
+  debconf_selections:
+    set1: |
+      docker.io docker.io/restart boolean true
+      wireshark-common wireshark-common/install-setuid boolean true
 package_reboot_if_required: true
 packages: [
   # For class use
@@ -23,13 +29,13 @@ packages: [
 # Reboots after packages are installed but before 'runcmd' can run.
 # Ensures a reboot between Docker installation and IMUNES setup.
 power_state:
-- delay: now
-- mode: reboot
-- message: "Rebooting to ensure Docker daemon is ready before installing IMUNES."
+  delay: now
+  mode: reboot
+  message: "Rebooting to ensure Docker daemon is ready before installing IMUNES."
 
 runcmd:
   # install IMUNES
-- git clone https://github.com/imunes/imunes.git /run/imunes_temp/
+- git clone https://github.com/jeffreyalanwang/imunes.git /run/imunes_temp/
 - cd /run/imunes_temp
 - sudo make install
 - cd
@@ -37,12 +43,8 @@ runcmd:
 - sudo imunes -p # probably won't work unless the system has been restarted since installing docker.io
   
   # include IMUNES templates in home directory
-- git clone https://github.com/imunes/imunes-examples.git /run/examples_temp/
-- mkdir /home/itsc/imunes-templates
-- cp /run/examples_temp/Traceroute/traceroute.imn imunes-templates/
-- cp /run/examples_temp/Ping/ping.imn imunes-templates/ # did i get them all?
-- cd
-- rm -rf /run/examples_temp
+- git clone https://github.com/imunes/imunes-examples.git /home/itsc/imunes-templates
 
   # ensure users have something to see when they test VS Code functionality
 - echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history
+- chown itsc /home/itsc/.bash_history
