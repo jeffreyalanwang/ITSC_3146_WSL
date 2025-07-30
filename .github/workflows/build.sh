@@ -93,36 +93,6 @@ get_files_to_copy_json() {
     echo "$json"
 }
 
-# Copy files into an image.
-#
-# Creates a new image.
-#
-# stdin:    JSON object of files to copy, with dest paths
-#           (see `main()` in `add_archive_file.sh`).
-# $1:       Name of final image (without suffix).
-# $2:       Path to base image.
-#
-# stdout:   Path to final image.
-#
-# shellcheck disable=SC2120 # param_count is 0
-insert_files() {
-    param_count 2 $#
-    local image_name; image_name="$1"
-    local base_image_path; base_image_path="$2"
-
-    # Create a value for `final_image_path`
-    local _filename _suffix final_image_path
-    _filename="$(basename "$base_image_path")"
-    _suffix="${_filename#*.}" # remove up to, and including, the first '.'
-    final_image_path="${BUILD_OUTPUT_DIR}/${image_name}.${_suffix}"
-
-    # Call helper script
-    echo "$files_json" |
-        "$ADD_ARCHIVE_FILE_SCRIPT" main "$base_image_path" "$final_image_path" 1>&2
-
-    echo "$final_image_path"
-}
-
 # Local build script.
 # Should have identical results as build.yml,
 # but may not work with certain features (e.g. upload a new release).
@@ -147,10 +117,21 @@ main() {
 
     # Inject files into archive
     for key in "${!base_images[@]}"; do
-        echo "$files_json" | insert_files "$key" "${base_images["$key"]}"
+        local image_name; image_name="$key"
+        local base_image_path; base_image_path="${base_images["$key"]}"
+
+        # Create a value for `final_image_path`
+        local _filename _suffix final_image_path
+        _filename="$(basename "$base_image_path")"
+        _suffix="${_filename#*.}" # remove up to, and including, the first '.'
+        final_image_path="${BUILD_OUTPUT_DIR}/${image_name}.${_suffix}"
+
+        # Call helper script
+        echo "$files_json" |
+            "$ADD_ARCHIVE_FILE_SCRIPT" main "$base_image_path" "$final_image_path"
     done
 
-    echo "Created images: ${!base_images[@]}" # prints keys e.g. arm64
+    echo "Created images: " "${!base_images[@]}" # prints keys e.g. arm64
     echo "In directory: $BUILD_OUTPUT_DIR"
 }
 
