@@ -13,6 +13,11 @@ jobs:
   run_tests:
     runs-on: ubuntu-latest
     steps:
+      - name: Make the files in this commit available to the current directory
+        uses: actions/checkout@v4
+        with:
+          path: ./repo/
+          
       - name: "Run tests (1/3: add_archive_file.sh)"
         run: .github/actions/add_archive_file/test.sh
 
@@ -99,10 +104,6 @@ jobs:
         # id: The release ID
         # html_url: The URL users can navigate to in order to view the release.
         # upload_url: The URL for uploading assets to the release.
-
-      - name: Debug output
-        if: always()
-        uses: ./repo/.github/actions/debug_output
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       release_id: ${{ steps.create_release.outputs.id }}
@@ -118,6 +119,11 @@ jobs:
     env:
       images_parent_dir: "~/images/"
     steps:
+      - name: Make the files in this commit available to the current directory
+        uses: actions/checkout@v4
+        with:
+          path: ./repo/
+
       - name: Download artifact from build_images
         uses: actions/download-artifact@v4
         with:
@@ -149,9 +155,5 @@ jobs:
         uses: liudonghua123/delete-release-action@v1
         with:
           release_id: ${{ needs.create_release.outputs.release_id }}
-
-      - name: Debug output
-        if: always()
-        uses: ./repo/.github/actions/debug_output
     outputs:
       upload_url: ${{ needs.create_release.outputs.upload_url }}
