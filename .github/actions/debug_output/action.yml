@@ -7,12 +7,11 @@ runs:
       if: always()
       shell: bash
       run: |
-        # ls ./
         
-        # ls -a -R ./ # find can better filter out extraneous dirs
+        # ls -l -aR ./ # find can better filter out extraneous dirs
         find . \
           -path './repo/.git' -prune -o \
-          -print
+          -ls -print
 
     - name: "Debug output 2/3: ls ~/"
       if: always()
