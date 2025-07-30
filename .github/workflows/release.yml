@@ -119,8 +119,6 @@ jobs:
     strategy:
       matrix:
         filename: ${{ fromJSON(needs.build_images.outputs.filenames) }}
-    env:
-      images_parent_dir: "~/images/"
     steps:
       - name: Make the files in this commit available to the current directory
         uses: actions/checkout@v4
@@ -128,10 +126,13 @@ jobs:
           path: ./repo/
 
       - name: Download artifact from build_images
+        id: get_artifact
         uses: actions/download-artifact@v4
         with:
           artifact-ids: ${{ needs.build_images.outputs.artifact_id }}
-          path: ${{ env.images_parent_dir }}
+          path: ~/images
+        # outputs:
+        # download-path
 
       - name: Upload Release Files
         uses: actions/upload-release-asset@v1
@@ -139,7 +140,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ${{ env.images_parent_dir }}${{ matrix.filename }}
+          asset_path: ${{ format('{0}/', steps.get_artifact.outputs.download-path) }}${{ matrix.filename }}
           asset_name: ITSC-3146-Windows-${{ matrix.filename }}
           asset_content_type: application/gzip
 
