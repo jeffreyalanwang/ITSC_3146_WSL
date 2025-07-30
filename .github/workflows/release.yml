@@ -1,4 +1,4 @@
-name: Build .wsl image
+name: Build + release .wsl image
 
 on:
   push:
@@ -19,13 +19,13 @@ jobs:
           path: ./repo/
           
       - name: "Run tests (1/3: add_archive_file.sh)"
-        run: .github/actions/add_archive_file/test.sh
+        run: /bin/bash .github/actions/add_archive_file/test.sh
 
       - name: "Run tests (2/3: get_ubuntu_images.sh)"
-        run: .github/actions/get_ubuntu_images/test.sh
+        run: /bin/bash .github/actions/get_ubuntu_images/test.sh
 
       - name: "Run tests (3/3: build.sh)"
-        run: .github/workflows/test.sh
+        run: /bin/bash .github/workflows/test.sh
 
       - name: Debug output
         if: always()
@@ -41,7 +41,7 @@ jobs:
 
       - name: Build images
         id: build_images
-        run: .github/workflows/build.sh
+        run: /bin/bash .github/workflows/build.sh
         working-directory: ./repo/
         # creates files in: ./repo/build/
 
