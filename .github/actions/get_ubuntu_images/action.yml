@@ -157,7 +157,7 @@ runs:
           exit 1
         fi
         if [ "$(du --block-size=1M $arm64_path | cut -f1)" -lt 200 ]; then
-          echo "Assertion failed: ARM image size is under 200M5" >&2
+          echo "Assertion failed: ARM image size is under 200M" >&2
           exit 1
         fi
       env:
