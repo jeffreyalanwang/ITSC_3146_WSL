@@ -41,7 +41,7 @@ jobs:
 
       - name: Build images
         id: build_images
-        run: ./repo/.github/workflows/build.sh
+        run: .github/workflows/build.sh
         working-directory: ./repo/
         # creates files in: ./repo/build/
 
