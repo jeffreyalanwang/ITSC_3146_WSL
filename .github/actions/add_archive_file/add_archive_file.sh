@@ -55,6 +55,7 @@ unzip_to_temp() {
         exit 1
     elif [[ -e "$decompressed_path" ]]; then
         echo "Warning: file already exists at this path, replacing it." >&2
+        echo "Warning: file already exists at this path, replacing it." >&2
     fi
 
     # Unzip to the temp location
@@ -92,6 +93,7 @@ add_file_to_archive() {
     if [[ ${file_dest_path:0:1} == '/' ]]; then
         echo "Warning: destination file path begins in '/'. " \
              "Files in tar archives are generally not absolute paths." >&2
+             "Files in tar archives are generally not absolute paths." >&2
     fi
 
     local sed_expression
@@ -103,12 +105,19 @@ add_file_to_archive() {
     echo "Adding to tar archive ${archive_path}"
     echo "File source: ${file_path}"
     echo "File destination: $(echo "$file_path" | sed -E "${sed_expression%x}")"
+    echo "File contents (first 5 lines): "
+    head -n 5 "${file_path}" | sed -e 's/^/| /'
+
+    if ( tar -tf "${archive_path}" | grep "$file_dest_path" > /dev/null ); then # grep -q would break pipe & then tar would fail
+        echo "Removing preexisting file at this path"
+        tar --delete -vf "$archive_path" "$file_dest_path"
+    fi
 
     # Note: tar --append does not remove an existing file with the same name.
-    # However, in a tar archive where multiple file records share one path,
-    # the file closest to the end of the tar archive stream (i.e. the one we append)
-    # takes precedent over the earlier ones.
-    tar --append -vf "$archive_path" --transform="$sed_expression" "$file_path" --show-transformed-names
+    tar --owner=root --group=root --mode=0755 \
+        -vf "$archive_path" \
+        --append "$file_path" \
+        --transform="$sed_expression" --show-transformed-names
     echo "Done"
 }
 
@@ -130,7 +139,7 @@ rezip_to_path() {
         echo "Error: we are compressing to the same path as we are reading from." >&2
         exit 1
     elif [[ -e "$dest_path" ]]; then
-        echo "Warning: file already exists at this path, replacing it." >&2
+        echo "Warning: file already exists at rezipped archive's path, replacing it." >&2
     fi
 
     # Rezip
@@ -163,11 +172,12 @@ main() {
 
     # Unzip archive
     local unzipped_path
+    echo "Unzipping default Ubuntu image..."
     unzipped_path="$( unzip_to_temp "$archive_path" )"
 
     # Add the files
     local -a keys vals; local count
-    readarray -t keys < <(echo "$files_json" | jq --raw-output 'keys[]')
+    readarray -t keys < <(echo "$files_json" | jq --raw-output 'keys_unsorted[]')
     readarray -t vals < <(echo "$files_json" | jq --raw-output '.[]')
     count="${#keys[@]}"
     for (( i=0 ; i < count ; i++ )); do
@@ -177,6 +187,7 @@ main() {
     done
 
     # Rezip archive
+    echo "Rezipping image..."
     rezip_to_path "$unzipped_path" "$modified_archive_path"
 }
 
@@ -189,4 +200,4 @@ if [[ ! -t 0 ]]; then
     cmdline_stdin="$(cat -)"
 fi
 fn_args=( "${@:2}" )
-echo  | $1 "${fn_args[@]}"
+$1 "${fn_args[@]}"
