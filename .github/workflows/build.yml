@@ -10,11 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # allow workflow to create releases
-      actions: write # allow workflow to work with cache
-      pages: write
-    env:
-        CLOUD_CONFIG_DEST_DIR_PATH: /etc/cloud/cloud.cfg.d/ # the path to the Linux folder where the cloud-init file goes
-        CLOUD_CONFIG_REPO_FILE_PATH: 99a_uncc_itsc_3146.cfg # the path to the cloud-init file within the GitHub repo, beginning without slash
     steps:
 
       - name: Make the files in this commit available to the current directory
@@ -25,8 +20,9 @@ jobs:
       - name: Get the base images
         id: get-images
         uses: ./repo/.github/actions/get_ubuntu_images
-        with:
-          path: ./imgs/
+        # outputs:
+        # amd64_path: path to downloaded image
+        # arm64_path: path to downloaded image
 
       - name: "Inject file into archive (1/2: amd64)"
         id: inject-file-amd64
