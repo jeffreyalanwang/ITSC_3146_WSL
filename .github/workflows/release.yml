@@ -13,6 +13,9 @@ jobs:
   run_tests:
     runs-on: ubuntu-latest
     steps:
+      - name: Install required packages
+        run: sudo apt install shellcheck shunit2
+
       - name: Make the files in this commit available to the current directory
         uses: actions/checkout@v4
         with:
