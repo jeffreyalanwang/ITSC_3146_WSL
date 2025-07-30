@@ -141,7 +141,7 @@ jobs:
   delete_release:
     runs-on: ubuntu-latest
     needs: [run_tests, create_release, attach_release_files]
-    if: !success()
+    if: ! success()
     permissions:
       contents: write # allow workflow to edit release
     steps:
