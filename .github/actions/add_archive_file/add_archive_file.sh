@@ -54,7 +54,7 @@ unzip_to_temp() {
         echo "Error: we are decompressing to the same path as we are reading from." >&2
         exit 1
     elif [[ -e "$decompressed_path" ]]; then
-        echo "Warning: file already exists at this path, replacing it."
+        echo "Warning: file already exists at this path, replacing it." >&2
     fi
 
     # Unzip to the temp location
@@ -91,7 +91,7 @@ add_file_to_archive() {
     fi
     if [[ ${file_dest_path:0:1} == '/' ]]; then
         echo "Warning: destination file path begins in '/'. " \
-             "Files in tar archives are generally not absolute paths."
+             "Files in tar archives are generally not absolute paths." >&2
     fi
 
     local sed_expression
@@ -130,7 +130,7 @@ rezip_to_path() {
         echo "Error: we are compressing to the same path as we are reading from." >&2
         exit 1
     elif [[ -e "$dest_path" ]]; then
-        echo "Warning: file already exists at this path, replacing it."
+        echo "Warning: file already exists at this path, replacing it." >&2
     fi
 
     # Rezip
@@ -155,6 +155,11 @@ main() {
     local files_json; files_json="$cmdline_stdin"
     local archive_path; archive_path="$1"
     local modified_archive_path; modified_archive_path="$2"
+
+    # Perform some checks
+    if [[ -z $files_json ]]; then
+        echo "Warning: no files to add." >&2
+    fi
 
     # Unzip archive
     local unzipped_path

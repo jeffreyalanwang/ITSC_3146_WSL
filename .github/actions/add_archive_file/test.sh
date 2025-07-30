@@ -94,7 +94,8 @@ test_unzip_to_temp() {
     cp -f "/tmp/hello.txt" "/tmp/hi.txt"
     cp -f "/tmp/hello.txt" "/tmp/add_archive_file/hi.txt"
     # execute
-    warning_str="$("$SCRIPT" unzip_to_temp "/tmp/hi.txt" | grep "Warning")"
+    warning_str="$("$SCRIPT" unzip_to_temp "/tmp/hi.txt" 2>&1 |
+                    grep "Warning")"
     # assert that we got a warning
     assertNotNull "$warning_str"
 
@@ -163,7 +164,8 @@ test_add_file_to_archive() {
     echo "= Case 4: ensure warning when / starts file dest path"
     # setup: none
     # execute
-    warning_str="$("$SCRIPT" add_file_to_archive "$tarpath" "$filepath" "/my/path/in/archive" | grep "Warning")"
+    warning_str="$("$SCRIPT" add_file_to_archive "$tarpath" "$filepath" "/my/path/in/archive" 2>&1 |
+                    grep "Warning")"
     # assert that we got a warning
     assertNotNull "$warning_str"
 
@@ -240,10 +242,10 @@ test_main() {
     '
 
     # create an example gzipped tar archive
-    local tarpath
+    local tarpath tarpath_count
     tarpath="/tmp/gzippedtar"
-    tar -c --to-stdout -T /dev/null | gzip > "$tarpath"
-    assertEquals 0 "$(tar -tvzf "$tarpath" | wc -l)"
+    tar -c --to-stdout "$SCRIPT_DIR" | gzip > "$tarpath"
+    tarpath_count="$(tar -tvzf "$tarpath" | grep '[^/]$' | wc -l)"
     
     # create example files
     echo "hi" > "/tmp/file 1"
@@ -263,41 +265,44 @@ test_main() {
     # execute
     echo "$files_json_value" | "$SCRIPT" main "$tarpath" "$dest_path"
     # assert archive is gzipped and has 2 files
-    files_count="$(tar -tz -f "$dest_path" | wc -l)"
-    assertEquals 2 "$files_count"
+    files_count="$(tar -tz -f "$dest_path" | grep '[^/]$' | wc -l)"
+    assertEquals $(( tarpath_count + 2 )) "$files_count"
     # assert the unzip happens properly
     mkdir -p "$unzip_dir"
     tar -xz -f "$dest_path" -C "$unzip_dir"
     unzipped_files_count="$(find "$unzip_dir" -type f | wc -l)"
-    assertEquals 2 "$unzipped_files_count"
+    assertEquals $(( tarpath_count + 2 )) "$unzipped_files_count"
     # assert md5 sums
     actual_file_1_md5="$(cat "${unzip_dir}/dest/file" | md5sum - | awk '{print $1}')"
     actual_file_2_md5="$(cat "${unzip_dir}/dest1" | md5sum - | awk '{print $1}')"
     assertSame "$expected_file_1_md5" "$actual_file_1_md5"
     assertSame "$expected_file_2_md5" "$actual_file_2_md5"
 
-    echo "= Case 2: ensure error when filepath and dest_path are the same"
+    echo "= Case 2: ensure warning when filepath and dest_path are the same"
     # setup: none
     # execute
-    echo "$files_json_value" | "$SCRIPT" main "$tarpath" "$tarpath"
-    # assert that we failed
-    assertFalse $?
+    warning_str="$(echo "$files_json_value" | "$SCRIPT" main "$tarpath" "$tarpath" 2>&1 |
+                    grep "Warning")"
+    # assert that we got a warning
+    assertNotNull "$warning_str"
 
-    echo "= Case 3: ensure error when some other file at dest_path"
+    echo "= Case 3: ensure warning when some other file at dest_path"
     # setup
     rm -f "$dest_path"
     touch "$dest_path"
     # execute
-    echo "$files_json_value" | "$SCRIPT" main "$tarpath" "$dest_path"
-    # assert that we failed
-    assertFalse $?
+    warning_str="$(echo "$files_json_value" | "$SCRIPT" main "$tarpath" "$dest_path" 2>&1 |
+                    grep "Warning")"
+    # assert that we got a warning
+    assertNotNull "$warning_str"
 
-    echo "= Case 4: ensure error when no stdin"
+    echo "= Case 4: ensure warning when no stdin"
     # setup: none
     # execute
-    "$SCRIPT" main "$tarpath" "$dest_path"
-    # assert that we failed
-    assertFalse $?
+    warning_str="$("$SCRIPT" main "$tarpath" "$dest_path" 2>&1 |
+                    grep "Warning" | grep "no files")"
+    # assert that we got a warning
+    assertNotNull "$warning_str"
 
     echo "" # Formatting between sections
 }
