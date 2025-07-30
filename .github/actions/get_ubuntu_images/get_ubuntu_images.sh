@@ -151,30 +151,34 @@ download_or_keep() {
 
     local needs_download
     needs_download=false
-    if [[ -e "$path" ]]; then # file already exists at the expected destination
-        
-        if { check_file_sum "$path" "$sha256sum"; }; then # file has the desired hash
-            needs_download=false
+    local loop_end # stop once we have a path where it's cached,
+                   # or we have created an unused path to download anew
+    while [[ "$loop_end" != 'true' ]]; do
 
-        else # file hash does not match
+        if [[ ! -e "$path" ]]; then # file doesn't exist yet
+
             needs_download=true
+            loop_end=true
 
-            # we will need to save with a new filename
-            while [[ -e "$path" ]]; do
-                path="${path}.1"
-            done
+        elif { check_file_sum "$path" "$sha256sum"; }; then # file has the desired hash
+            
+            needs_download=false
+            loop_end=true
+
+        else # this file's hash does not match
+        
+            # create a new path, check that one
+            path="${path}.1"
+            loop_end=false
+
         fi
 
-    else # file doesn't exist yet
-        needs_download=true
-    fi
+    done
 
     if [[ "$needs_download" == 'true' ]]; then
-        if [[ -e "$path" ]]; then
-            echo "Error: unreachable situation occurred." >&2
-            exit 1
-        fi
+    
         wget "$url" -O- > "$path"
+
     fi
 
     # output
