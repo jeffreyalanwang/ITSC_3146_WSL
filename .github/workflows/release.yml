@@ -66,7 +66,7 @@ jobs:
                         -type f             \
                         -printf '"%f", '    )"
           file_list=${file_list%', '}
-          echo 'filenames=[$file_list]' >> "$GITHUB_OUTPUT"
+          echo "filenames=[$file_list]" >> "$GITHUB_OUTPUT"
         env:
           path: ./repo/build
         # outputs:
