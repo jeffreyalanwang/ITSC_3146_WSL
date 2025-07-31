@@ -1,4 +1,4 @@
-# UNC Charlotte ITSC 3146 virtual environment (Lima)
+# UNC Charlotte ITSC 3146 virtual environment (WSL)
 
 This repository is meant for Windows users. Mac or Linux users should use the [Lima version](https://github.com/jeffreyalanwang/ITSC_3146_Lima).
 
