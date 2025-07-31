@@ -141,7 +141,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create_release.outputs.upload_url }}
-          asset_path: ${{ format('{0}/artifact/', steps.get_artifact.outputs.download-path) }}${{ matrix.filename }}
+          asset_path: ${{ format('{0}/artifacts/', steps.get_artifact.outputs.download-path) }}${{ matrix.filename }}
           asset_name: ITSC-3146-Windows-${{ matrix.filename }}
           asset_content_type: application/gzip
 
@@ -149,7 +149,7 @@ jobs:
         if: always()
         uses: ./repo/.github/actions/debug_output
   
-  delete_release:
+  delete_release_if_fail:
     runs-on: ubuntu-latest
     needs:
       - run_tests
