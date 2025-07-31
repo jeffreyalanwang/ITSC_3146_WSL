@@ -167,5 +167,8 @@ fi
 # Set the newly created user as the WSL default.
 set_user_as_default "${username}"
 
+echo
 echo "Shutting down in 2 seconds; close this terminal, then reopen from Start Menu or with 'wsl -d ITSC-3146.'"
+echo
+echo
 { sleep 2 && wsl.exe --shutdown; } & disown
