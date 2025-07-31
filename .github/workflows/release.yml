@@ -167,5 +167,7 @@ jobs:
         uses: liudonghua123/delete-release-action@v1
         with:
           release_id: ${{ needs.create_release.outputs.release_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
       upload_url: ${{ needs.create_release.outputs.upload_url }}
