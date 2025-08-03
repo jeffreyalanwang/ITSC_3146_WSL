@@ -51,3 +51,8 @@ In `/etc/cloud/cloud.cfg.d/`, we override all other configuration and direct `cl
 
 ### Networking
 On first boot, [wsl-oobe-itsc.sh](/wsl/wsl-oobe-itsc.sh) configures WSL to use *mirrored networking* instead of the default NAT, for better host VPN support.
+
+### Copy/paste
+`xterm` is configured to copy and paste using the CLIPBOARD buffer instead of PRIMARY, and to use the keyboard shortcuts:
+* Ctrl+Shift+C
+* Ctrl+Shift+V
