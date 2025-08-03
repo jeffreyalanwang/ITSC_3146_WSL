@@ -21,7 +21,9 @@ Files in [/.github/](/.github/) configure the automated building and release of 
 
 Files in [/cloud-init/](/cloud-init/) configure the initialization of our guest system.
 
-Files in [/wsl/](/wsl/) are  added to the image as configuration for WSL.
+Files in [/wsl/](/wsl/) are added to the image as configuration for WSL.
+
+Files in [/X11/](/X11/) contain configuration for GUI applications such as xterm.
 
 ### Builds and releases
 Locally build images using [/.github/workflows/build.sh](/.github/workflows/build.sh).
