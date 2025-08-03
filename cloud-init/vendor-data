@@ -43,3 +43,7 @@ runcmd:
 
   # ensure users have something to see when they test VS Code functionality
 - su itsc -c 'echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history'
+
+  # Clipboard support in xterm
+- sudo ln -s /etc/CCI/Xdefaults /home/itsc/.Xdefaults
+- sudo ln -s /etc/CCI/Xdefaults /root/.Xdefaults
