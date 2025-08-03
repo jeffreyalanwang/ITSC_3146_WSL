@@ -36,10 +36,10 @@ runcmd:
 - rm -rf /opt/imunes_temp
 
   # include IMUNES templates in home directory
-- git clone https://github.com/imunes/imunes-examples.git /opt/imunes-templates_temp
-- su itsc -c 'cp -r /opt/imunes-templates_temp/ /home/itsc/imunes-templates'
+- git clone https://github.com/imunes/imunes-examples.git /opt/imunes-examples_temp
+- su itsc -c 'cp -r /opt/imunes-examples_temp/ /home/itsc/imunes-examples'
   # clean up
-- rm -rf /opt/imunes-templates_temp
+- rm -rf /opt/imunes-examples_temp
 
   # ensure users have something to see when they test VS Code functionality
 - su itsc -c 'echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history'
