@@ -47,7 +47,11 @@ Every commit to the `release` branch triggers a [GitHub Actions workflow](/.gith
 ### Initialization
 Our image build does not run the Linux system. Instead, we inject configuration for `cloud-init` to find and execute on first boot.
 
-In `/etc/cloud/cloud.cfg.d/`, we override all other configuration and direct `cloud-init` to look in `/etc/CCI/cloud-init/` for our config. There, we are required to provide `meta-data` and `user-data` files (even if empty). We place our config in `vendor-data` to avoid surprise conflict with [WSL's mechanism](https://cloudinit.readthedocs.io/en/latest/reference/datasources/wsl.html) for users to inject their own `user-data` config.
+In `/etc/cloud/cloud.cfg.d/`, we override all other configuration and direct `cloud-init` to look in `/etc/CCI/cloud-init/` for our config. There, we are required to provide `meta-data` and `user-data` files (even if empty). We place our initialization commands in `vendor-data` to avoid surprise conflict with [WSL's mechanism](https://cloudinit.readthedocs.io/en/latest/reference/datasources/wsl.html) for users to inject their own `user-data` config.
+
+### IMUNES installation
+We currently install IMUNES from a mirror with a few bugfixes required for this course at:
+https://github.com/jeffreyalanwang/imunes
 
 ### Networking
 On first boot, [wsl-oobe-itsc.sh](/wsl/wsl-oobe-itsc.sh) configures WSL to use *mirrored networking* instead of the default NAT, for better host VPN support.
