@@ -46,7 +46,7 @@ echo_args() {
 #
 populated_links=false
 # shellcheck disable=SC2120 # param_count is 0
-get_wsl_image_links() { #TODO test using expected string lengths or URL format and expected substring presence (arm/amd)
+get_wsl_image_links() {
     param_count 0 $#
     # Latest Ubuntu WSL image available at:
     # https://github.com/microsoft/WSL/blob/master/distributions/DistributionInfo.json
