@@ -96,7 +96,7 @@ jobs:
         uses: actions/create-release@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION_ID: v0.0.${{ steps.truncated_sha.outputs.string }}
+          VERSION_ID: v0.2.${{ steps.truncated_sha.outputs.string }}
         with:
           tag_name: ${{ env.VERSION_ID }}
           release_name: Release ${{ env.VERSION_ID }}
