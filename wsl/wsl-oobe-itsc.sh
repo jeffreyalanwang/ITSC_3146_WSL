@@ -123,7 +123,7 @@ function ensure_wslconfig_settings() {
 		sed -i -E 's/networkingMode.*$/networkingMode=mirrored/' "$wslconfig_path"
 	else
 		# place right after the [wsl2] header
-		gawk -i inplace '/[wsl2]/ { print; print "networkingMode=mirrored"; next }1' "$wslconfig_path"
+		gawk -i inplace '/\[wsl2\]/ { print; print "networkingMode=mirrored"; next }1' "$wslconfig_path"
 	fi
 }
 
