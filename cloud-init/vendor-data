@@ -41,9 +41,16 @@ runcmd:
   # clean up
 - rm -rf /opt/imunes-examples_temp
 
-  # ensure users have something to see when they test VS Code functionality
-- su itsc -c 'echo "EXAMPLE BASH HISTORY" >> /home/itsc/.bash_history'
-
   # Clipboard support in xterm
 - sudo ln -s /etc/CCI/Xdefaults /home/itsc/.Xdefaults
 - sudo ln -s /etc/CCI/Xdefaults /root/.Xdefaults
+
+write_files:
+
+  # ensure users have something to see when they test VS Code functionality
+- path: /home/itsc/.bash_history
+  owner: itsc:itsc
+  defer: true
+  append: true
+  content: |
+    EXAMPLE BASH HISTORY
