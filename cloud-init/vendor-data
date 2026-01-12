@@ -63,7 +63,7 @@ write_files:
   defer: true
   append: true
   content: |
-    if ! command -v imunes; then
+    if ! ( command -v imunes ) >/dev/null; then
       echo 'Warning: IMUNES not installed. Try installing with:'
       echo '  sudo apt update'
       echo '  sudo cloud-init single --name package_update_upgrade_install --frequency always'
