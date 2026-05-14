@@ -40,13 +40,13 @@ test_get_files_to_copy_json() {
     local keys
     readarray keys < <(echo "$json_obj" | jq 'keys[]')
     # assert that there are more than 3 files to copy
-    assertTrue "[[ 3 < ${#keys[@]} ]]"
+    assertTrue "[[ 3 -lt ${#keys[@]} ]]"
     # assert that every key is a filename that exists
     for key in "${keys[@]}"; do
         assertTrue "[[ -f $key ]]"
     done
     
-    echo "" # Formatting between sectionss
+    echo "" # Formatting between sections
 }
 
 test_main() {
