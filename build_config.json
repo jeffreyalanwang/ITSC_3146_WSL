@@ -8,6 +8,7 @@
         "/wsl/wsl-distribution.conf": "/etc/wsl-distribution.conf",
         "/wsl/wsl-oobe-itsc.sh": "/etc/CCI/wsl-oobe-itsc.sh",
         "/wsl/wsl-terminal-profile.json": "/etc/CCI/wsl-terminal-profile.json",
-        "/X11/Xdefaults": "/etc/CCI/Xdefaults"
+        "/X11/Xdefaults": "/etc/CCI/Xdefaults",
+        "/docker/daemon.json": "/etc/docker/daemon.json"
     }
 }
